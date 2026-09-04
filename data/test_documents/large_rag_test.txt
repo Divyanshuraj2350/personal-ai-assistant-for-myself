@@ -1,0 +1,76 @@
+Artificial intelligence is a field of computer science focused on
+creating systems capable of performing tasks that normally require
+human intelligence. These tasks include reasoning, learning, language
+understanding, decision making, and problem solving.
+
+Machine learning is an important area of artificial intelligence.
+Instead of programming every rule manually, machine learning systems
+learn patterns from data. Common applications include image
+classification, recommendation systems, fraud detection, and language
+processing.
+
+Deep learning is a specialized area of machine learning based on
+artificial neural networks with multiple layers. Deep learning has
+become especially important for computer vision, speech recognition,
+and large language models.
+
+Large language models are trained on large collections of text.
+They learn statistical relationships between words, sentences, and
+concepts. A language model can generate text by predicting the next
+token based on the previous context.
+
+Retrieval-Augmented Generation, commonly called RAG, combines a
+language model with an external knowledge retrieval system. Instead
+of relying only on information stored in the language model, the
+system searches a knowledge base for relevant documents.
+
+A typical RAG pipeline begins when a user asks a question. The system
+converts the question into an embedding and searches a vector database
+for semantically similar document chunks. The most relevant chunks
+are then added to the context given to the language model.
+
+Vector databases store embeddings representing the semantic meaning
+of text. Text with similar meaning tends to have embeddings located
+close to one another in the vector space. This allows semantic search
+instead of simple keyword matching.
+
+Document chunking is an important part of a RAG system. Large
+documents are divided into smaller sections before embeddings are
+created. Chunking makes retrieval more precise because the system can
+retrieve the relevant section instead of returning an entire document.
+
+Chunk overlap helps preserve context between neighboring chunks.
+Without overlap, an important explanation could begin at the end of
+one chunk and continue at the beginning of another chunk. Overlapping
+chunks reduce the chance that important context is separated.
+
+A unified AI assistant can combine multiple systems. These systems may
+include a local language model, conversation memory, persistent
+memory, personal memory, RAG knowledge retrieval, planning, and tool
+execution.
+
+The unified context system combines relevant information from these
+different systems before sending the final prompt to the language
+model. This allows the assistant to use conversation history, memory,
+retrieved knowledge, and tool results together.
+
+The Personal AI project is intended to develop this type of unified
+AI assistant. The architecture includes a local language model,
+short-term conversation memory, persistent session memory, long-term
+personal memory, RAG knowledge retrieval, planning, tool execution,
+and unified context building.
+
+The knowledge base is designed to allow documents to be ingested and
+retrieved when relevant to a user's question. The vector database
+stores document chunks together with metadata such as the document
+identifier, source, file name, chunk index, and creation time.
+
+Proper metadata is important because it allows retrieved knowledge to
+be traced back to its original source. This becomes increasingly useful
+as the knowledge base grows to include many documents.
+
+The Personal AI project is also intended to eventually support both
+web and mobile platforms. However, the current development priority is
+building the core AI architecture before expanding into additional
+platform-specific capabilities.
+

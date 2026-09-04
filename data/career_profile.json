@@ -1,0 +1,200 @@
+{
+    "personal": {
+        "full_name": "Divyanshu Raj",
+        "email": "divyanshuraj2796@gmail.com",
+        "phone": "+91 9523301005",
+        "location": "Bengaluru, India"
+    },
+
+    "professional_links": {
+        "github": "https://github.com/Divyanshuraj2350",
+        "linkedin": "https://www.linkedin.com/in/divyanshu-raj-3669a8356",
+        "portfolio": ""
+    },
+
+    "education": [
+        {
+            "degree": "Bachelor of Engineering",
+            "field": "Computer Science & Engineering",
+            "institution": "Acharya Institute of Technology",
+            "location": "Bengaluru, India",
+            "start_year": "2023",
+            "end_year": "2027",
+            "cgpa": "8.3/10",
+            "coursework": [
+                "Data Structures & Algorithms",
+                "Computer Networks",
+                "Operating Systems",
+                "Database Management Systems",
+                "Object-Oriented Programming",
+                "Software Engineering"
+            ]
+        }
+    ],
+
+    "skills": {
+        "programming_languages": [
+            "C",
+            "C++",
+            "Python",
+            "Java",
+            "JavaScript"
+        ],
+        "frameworks": [
+            "FastAPI",
+            "Node.js",
+            "React.js"
+        ],
+        "libraries": [
+            "scikit-learn",
+            "Computer Vision"
+        ],
+        "databases": [
+            "MySQL",
+            "MongoDB"
+        ],
+        "tools": [
+            "Git",
+            "GitHub",
+            "VS Code",
+            "Ganache",
+            "MetaMask",
+            "Ethers.js"
+        ],
+        "cloud": [],
+        "networking": [
+            "TCP/IP",
+            "Routing/Switching fundamentals",
+            "Wi-Fi protocols",
+            "REST APIs"
+        ],
+        "linux_systems": [
+            "Linux/Ubuntu",
+            "Bash scripting",
+            "Process management",
+            "Service/daemon workflows"
+        ],
+        "ai_machine_learning": [
+            "Python ML pipelines",
+            "scikit-learn",
+            "Computer Vision",
+            "LLM APIs",
+            "OpenAI APIs"
+        ],
+        "embedded_security": [
+            "Embedded security design",
+            "Biometric systems",
+            "Authentication architecture"
+        ],
+        "blockchain": [
+            "Solidity",
+            "Ethereum",
+            "Smart Contracts"
+        ],
+        "web": [
+            "HTML",
+            "CSS"
+        ],
+        "other": []
+    },
+
+    "experience": [
+        {
+            "company": "Pratinik Infotech",
+            "role": "Machine Learning Intern",
+            "location": "Bengaluru, India",
+            "start_date": "Feb 2026",
+            "end_date": "Apr 2026",
+            "responsibilities": [
+                "Developed and automated ML data preprocessing pipelines in Python.",
+                "Built, trained, and evaluated supervised ML models using scikit-learn, NumPy, and Pandas.",
+                "Analyzed model performance metrics to guide iterative improvements.",
+                "Implemented Python scripts to automate model testing and result logging workflows.",
+                "Collaborated with senior engineers on model deployment workflows."
+            ]
+        }
+    ],
+
+    "projects": [
+        {
+            "name": "AI-Based Parental Control System",
+            "technologies": [
+                "Python",
+                "Computer Vision",
+                "FastAPI",
+                "Android Security"
+            ],
+            "description": "Intelligent security system using facial recognition, OTP-based access control, secure biometric storage, and a FastAPI backend for authentication, activity logging, and uninstall protection."
+        },
+        {
+            "name": "AI Code Review Assistant",
+            "technologies": [
+                "Python",
+                "FastAPI",
+                "LLM APIs",
+                "REST"
+            ],
+            "description": "Python-based automation tool using LLM APIs to analyze source code and provide categorized, actionable feedback with a FastAPI backend and interactive review dashboard."
+        },
+        {
+            "name": "WarrantyChain – Blockchain Warranty & Ownership Verification",
+            "technologies": [
+                "Solidity",
+                "Ethereum",
+                "React.js",
+                "Node.js",
+                "Ethers.js"
+            ],
+            "description": "Decentralized application for warranty registration, verification, and ownership transfer using Solidity smart contracts, MetaMask authentication, React.js, Node.js, and Ethers.js."
+        }
+    ],
+
+    "certifications": [
+        "Machine Learning Internship Certificate – Pratinik Infotech",
+        "Machine Learning and AI Foundations: Prediction, Causation and Statistical Inference – LinkedIn Learning",
+        "Practical Cybersecurity for IT Professionals – LinkedIn Learning",
+        "Introduction to Identity and Access Management (IAM) – LinkedIn Learning",
+        "Build Your Cloud Computing Skills & Introduction to Cloud Computing for IT Professionals – LinkedIn Learning",
+        "Networking and Administration Fundamentals – LinkedIn Learning",
+        "Agile Project Management with Jira Cloud – LinkedIn Learning"
+    ],
+
+    "achievements": [
+        "Secured Top 23 position at Hackaphasia Hackathon 2025 among 200+ teams.",
+        "Participated in AmBITion Hackathon 2025 and built a functional prototype under a 24-hour constraint.",
+        "Active participant in technical coding challenges, project-based competitions, and open-source learning programs."
+    ],
+
+    "soft_skills": [
+        "Team Collaboration",
+        "Leadership",
+        "Problem Solving",
+        "Adaptability",
+        "Time Management",
+        "Attention to Detail",
+        "Critical Thinking",
+        "Communication"
+    ],
+
+    "preferred_roles": [
+        "Software Engineer",
+        "AI/ML Engineer",
+        "AI Engineer",
+        "Python Developer"
+    ],
+
+    "preferred_locations": [
+        "Anywhere"
+    ],
+
+    "experience_level": [
+        "Internship",
+        "Entry-level/Fresher"
+    ],
+
+    "preferences": {
+        "remote": true,
+        "hybrid": true,
+        "onsite": true
+    }
+}

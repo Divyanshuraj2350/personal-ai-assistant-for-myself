@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "What is 25 * 18 + 40?"
+  },
+  {
+    "role": "assistant",
+    "content": "The result of $ 25 \\times 18 + 40 $ is:\n\n$$\n25 \\times 18 = 450\n$$\n$$\n450 + 40 = 490\n$$\n\nFinal answer: **490**."
+  }
+]

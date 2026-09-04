@@ -1,0 +1,32 @@
+[
+  {
+    "id": "466be82f-be8e-497f-b6d7-cd52a5a212d3",
+    "content": "My Personal AI project should be developed phase by phase without unnecessary complexity.",
+    "category": "project",
+    "created_at": "2026-08-26T03:58:49.878166"
+  },
+  {
+    "id": "8b6c4f1b-60ba-4f70-9166-01044b83d118",
+    "content": "The current priority is building the Personal AI core before the phone assistant.",
+    "category": "project",
+    "created_at": "2026-08-26T03:58:49.878278"
+  },
+  {
+    "id": "c7f87d5c-8f7c-4111-835e-999e9e31f5b4",
+    "content": "I prefer Python for backend development.",
+    "category": "preference",
+    "created_at": "2026-08-26T04:33:10.753158"
+  },
+  {
+    "id": "9efd7023-c0c7-4897-9338-4c3b0d5484b2",
+    "content": ", keep my Personal AI project simple.",
+    "category": "project",
+    "created_at": "2026-08-26T04:33:10.753400"
+  },
+  {
+    "id": "236cb3b4-f337-452d-beb5-129a171f541e",
+    "content": "keep my Personal AI project simple.",
+    "category": "project",
+    "created_at": "2026-08-26T04:38:21.224582"
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "content": "For this conversation only, my test code is BLUE-123."
+  },
+  {
+    "role": "assistant",
+    "content": "Got it! Your test code is **BLUE-123** for this conversation only. Let me know if you need help with anything related to it!"
+  },
+  {
+    "role": "user",
+    "content": "What is my test code?"
+  },
+  {
+    "role": "assistant",
+    "content": "Your test code is **BLUE-123**."
+  }
+]

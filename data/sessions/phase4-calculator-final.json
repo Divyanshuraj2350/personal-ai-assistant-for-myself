@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "content": "What is 125 * 4 + 20?"
+  },
+  {
+    "role": "assistant",
+    "content": "Let's calculate the expression step by step:\n\n1. Multiply 125 by 4:  \n   $ 125 \\times 4 = 500 $\n\n2. Add 20 to the result:  \n   $ 500 + 20 = 520 $\n\nThe final result is **520**."
+  },
+  {
+    "role": "user",
+    "content": "What is 125 * 4 + 20?"
+  },
+  {
+    "role": "assistant",
+    "content": "The result of $ 125 \\times 4 + 20 $ is **520**."
+  }
+]

@@ -1,0 +1,7 @@
+The Internet of Things, or IoT, connects physical devices
+to the internet.
+
+IoT systems commonly include sensors, actuators,
+microcontrollers, communication networks, and cloud services.
+
+Sensors collect information from the physical environment.

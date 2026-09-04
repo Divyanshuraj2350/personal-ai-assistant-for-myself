@@ -1,0 +1,11 @@
+A stack is a linear data structure that follows the Last In, First Out (LIFO) principle.
+
+The main operations of a stack are push, pop, and peek.
+
+A queue is a linear data structure that follows the First In, First Out (FIFO) principle.
+
+The main operations of a queue are enqueue and dequeue.
+
+Binary search is an efficient searching algorithm that works on sorted arrays.
+
+Binary search has O(log n) time complexity because it divides the search space in half at each step.

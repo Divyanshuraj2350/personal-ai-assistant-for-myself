@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "What is Python commonly used for?"
+  },
+  {
+    "role": "assistant",
+    "content": "Python is commonly used for web development, data science, artificial intelligence, automation, and scripting."
+  }
+]

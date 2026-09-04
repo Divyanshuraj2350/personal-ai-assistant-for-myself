@@ -1,0 +1,26 @@
+[
+  {
+    "role": "user",
+    "content": "25 * 18 + 40"
+  },
+  {
+    "role": "assistant",
+    "content": "```markdown\n# Calculator Result\n\n**Answer:** 490\n```"
+  },
+  {
+    "role": "user",
+    "content": "What is 2 ** 10?"
+  },
+  {
+    "role": "assistant",
+    "content": "```markdown\n# Calculator Result\n\n**Answer:** 1024\n```"
+  },
+  {
+    "role": "user",
+    "content": "What is a binary search tree?"
+  },
+  {
+    "role": "assistant",
+    "content": "A binary search tree (BST) is a binary tree data structure where each node has at most two children, referred to as the left child and the right child. The tree is structured such that for any given node:\n\n- The left subtree contains only nodes with values less than the node's value.\n- The right subtree contains only nodes with values greater than the node's value.\n\nThis structure allows for efficient searching, insertion, and deletion operations."
+  }
+]

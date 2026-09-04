@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "content": "What does my Personal AI project include?"
+  },
+  {
+    "role": "assistant",
+    "content": "Your Personal AI project includes the following components:\n\n- **Local Language Model**: A language model that runs locally to ensure privacy and efficiency.\n- **Short-Term Conversation Memory**: Stores recent interactions to maintain context during conversations.\n- **Persistent Session Memory**: Retains information across sessions for a more seamless experience.\n- **Long-Term Personal Memory**: Stores personal data and preferences for consistent behavior over time.\n- **RAG Knowledge Retrieval**: Enables the AI to retrieve relevant information from documents stored in the knowledge base.\n- **Planning and Tool Execution**: The AI can plan tasks and execute tools to perform actions.\n- **Unified Context Building**: Combines all the above components to provide a cohesive and context-aware experience.\n\nThe project is designed to function on both a **web platform** and a **mobile platform**, with the current priority being the development of the **Personal AI core** before the **phone assistant**."
+  },
+  {
+    "role": "user",
+    "content": "What does an IoT sensor do?"
+  },
+  {
+    "role": "assistant",
+    "content": "An IoT sensor collects information from the physical environment. It detects and measures various parameters such as temperature, humidity, motion, or light, and converts this data into digital signals that can be transmitted to other devices or systems for further processing or analysis."
+  }
+]

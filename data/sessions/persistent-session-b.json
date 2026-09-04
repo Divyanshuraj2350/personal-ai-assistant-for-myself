@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "What is the secret project code I mentioned?"
+  },
+  {
+    "role": "assistant",
+    "content": "I don't have that information."
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "role": "user",
+    "content": "For this conversation only, the secret project code is ORANGE-739."
+  },
+  {
+    "role": "assistant",
+    "content": "Secret project code: **ORANGE-739**"
+  },
+  {
+    "role": "user",
+    "content": "What is the secret project code I mentioned?"
+  },
+  {
+    "role": "assistant",
+    "content": "The secret project code you mentioned is **ORANGE-739**."
+  },
+  {
+    "role": "user",
+    "content": "What is the secret project code I mentioned?"
+  },
+  {
+    "role": "assistant",
+    "content": "The secret project code you mentioned is **ORANGE-739**."
+  }
+]

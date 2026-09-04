@@ -1,0 +1,45 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables / secrets
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# Local database / vector database
+chroma_db/
+data/chroma/
+*.sqlite3
+*.db
+
+# Temporary files
+tmp/
+temp/
+# Google OAuth secrets
+credentials.json
+token.json
+
+# Environment secrets
+.env
+.env.*
+!.env.example

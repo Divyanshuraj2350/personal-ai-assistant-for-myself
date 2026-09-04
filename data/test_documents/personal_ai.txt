@@ -1,0 +1,12 @@
+My Personal AI project is designed as a unified AI assistant.
+
+The system includes a local language model, short-term
+conversation memory, persistent session memory, long-term
+personal memory, RAG knowledge retrieval, planning, tool
+execution, and unified context building.
+
+The project is intended to work on both a web platform and
+a mobile platform.
+
+The RAG system allows the AI to retrieve relevant information
+from documents stored in the knowledge base.

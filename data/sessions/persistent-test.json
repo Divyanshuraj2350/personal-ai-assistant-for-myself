@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "For this conversation only, the secret code is ORANGE-739."
+  },
+  {
+    "role": "assistant",
+    "content": "I will remember that for this conversation."
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "test-store-001": {
+    "approval_id": "test-store-001",
+    "status": "approved",
+    "recipient": "professor@example.com",
+    "subject": "DBMS Assignment",
+    "body": "I will submit it tomorrow.",
+    "approved": true
+  },
+  "connect-test-001": {
+    "status": "approved",
+    "approval_id": "connect-test-001",
+    "recipient": "professor@example.com",
+    "subject": "DBMS Assignment",
+    "body": "I will submit it tomorrow.",
+    "approved": true
+  },
+  "connect-test-002": {
+    "status": "rejected",
+    "approval_id": "connect-test-002",
+    "recipient": "professor@example.com",
+    "subject": "Test",
+    "body": "Test email.",
+    "approved": false
+  },
+  "93569181-df75-4859-a89f-d61c60054117": {
+    "status": "approved",
+    "approval_id": "93569181-df75-4859-a89f-d61c60054117",
+    "recipient": "professor@example.com",
+    "subject": "Submission of DBMS Assignment",
+    "body": "Dear Professor,\n\nI hope this message finds you well. I am writing to inform you that I will be submitting my DBMS assignment tomorrow. Please let me know if there are any specific instructions or deadlines I should be aware of.\n\nThank you for your time and guidance.\n\nBest regards,\n[Your Name]",
+    "approved": true
+  },
+  "95f0a249-dff9-4346-b5c0-12ba5b6427fa": {
+    "status": "approved",
+    "approval_id": "95f0a249-dff9-4346-b5c0-12ba5b6427fa",
+    "recipient": "YOUR_TEST_EMAIL@gmail.com",
+    "subject": "Test Email from My Personal AI",
+    "body": "Dear YOUR_TEST_EMAIL@gmail.com,\n\nThis is a test email sent from My Personal AI to YOUR_TEST_EMAIL@gmail.com. The purpose of this email is to confirm that the system is functioning correctly and to ensure that all communication channels are operational.\n\nPlease disregard this message as it is solely for testing purposes.\n\nBest regards,\nMy Personal AI",
+    "approved": true
+  },
+  "070c6107-f52e-4fc0-baa4-4146f80180bf": {
+    "status": "approved",
+    "approval_id": "070c6107-f52e-4fc0-baa4-4146f80180bf",
+    "recipient": "dayanand95233@gmail.com",
+    "subject": "Test Email from My Personal AI",
+    "body": "Dear Dayanand,\n\nThis is a test email sent from My Personal AI. Please be informed that this is a simulated message to verify the functionality of the system.\n\nBest regards,\nMy Personal AI",
+    "approved": true
+  },
+  "cc690b2e-5f33-46be-b3bf-641c778b5a5c": {
+    "status": "approved",
+    "approval_id": "cc690b2e-5f33-46be-b3bf-641c778b5a5c",
+    "recipient": "dayanand95233@gmail.com",
+    "subject": "Test Email from My Personal AI",
+    "body": "Dear Dayanand,\n\nThis is a test email sent from My Personal AI. Please be informed that this is a routine test to ensure everything is functioning properly.\n\nBest regards,\nMy Personal AI",
+    "approved": true
+  }
+}
