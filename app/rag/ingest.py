@@ -182,6 +182,7 @@ def ingest_text(
     text,
     source="manual",
     metadata=None,
+    document_id=None,
 ):
     """
     Full ingestion pipeline for text.
@@ -211,10 +212,10 @@ def ingest_text(
             "status": "error",
             "error": "No valid text to ingest.",
         }
-
-    document_id = create_document_id(
-        cleaned_text
-    )
+    if document_id is None:
+        document_id = create_document_id(
+            cleaned_text
+        )
 
     chunks = chunk_text(
         cleaned_text

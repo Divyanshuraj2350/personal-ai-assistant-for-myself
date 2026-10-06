@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="My Personal AI - Personal assistant, coding assistant and career assistant"
+    >
+
+    <title>My Personal AI</title>
+
+    <link
+        rel="stylesheet"
+        href="/frontend/style.css"
+    >
+</head>
+
+
+<body>
+
+    <div class="app">
+
+        <!-- ==================================================
+             HEADER
+        =================================================== -->
+
+        <header class="header">
+
+            <div class="header-left">
+
+                <h1>
+                    🤖 My Personal AI
+                </h1>
+
+            </div>
+
+            <span id="status">
+                ● Online
+            </span>
+
+        </header>
+
+
+        <!-- ==================================================
+             MAIN CHAT
+        =================================================== -->
+
+        <main
+            id="chat"
+            class="chat"
+        >
+
+            <div class="welcome">
+
+                <h2>
+                    How can I help you?
+                </h2>
+
+                <p>
+                    Ask me anything about coding, DSA, CSE,
+                    general topics, or use the Career Assistant
+                    to analyze a job and tailor your resume.
+                </p>
+
+            </div>
+
+        </main>
+
+
+        <!-- ==================================================
+             CAREER ASSISTANT
+        =================================================== -->
+
+        <section
+            class="career-panel"
+            aria-label="Career Assistant"
+        >
+
+            <!-- Career Header -->
+
+            <div class="career-header">
+
+                <div class="career-title">
+
+                    <span class="career-icon">
+                        💼
+                    </span>
+
+                    <div>
+
+                        <h3>
+                            Career Assistant
+                        </h3>
+
+                        <p>
+                            Analyze a job, compare it with your
+                            career profile, and generate a
+                            grounded tailored resume.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Job URL Input -->
+
+            <div class="career-input-row">
+
+                <input
+                    id="job-url"
+                    type="url"
+                    placeholder="Paste job posting URL..."
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-label="Job posting URL"
+                >
+
+                <button
+                    id="career-button"
+                    type="button"
+                >
+                    Analyze &amp; Tailor
+                </button>
+
+            </div>
+
+
+            <!-- Career Status -->
+
+            <div
+                id="career-status"
+                class="career-status"
+                aria-live="polite"
+            >
+                Ready
+            </div>
+
+
+            <!-- Career Results -->
+
+            <div
+                id="career-result"
+                class="career-result"
+            ></div>
+
+        </section>
+
+
+        <!-- ==================================================
+             CHAT INPUT
+        =================================================== -->
+
+        <div class="input-area">
+
+            <input
+                id="file-input"
+                type="file"
+                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                hidden
+            >
+
+            <button
+                id="attach-button"
+                type="button"
+                title="Attach document"
+                aria-label="Attach document"
+            >
+                📎
+            </button>
+
+            <textarea
+                id="message"
+                placeholder="Message My Personal AI..."
+                rows="1"
+                aria-label="Message"
+            ></textarea>
+
+            <button
+                id="mic-button"
+                type="button"
+                title="Voice input"
+                aria-label="Voice input"
+            >
+                🎤
+            </button>
+
+            <button
+                id="send-button"
+                type="button"
+                title="Send message"
+                aria-label="Send message"
+            >
+                ➤
+            </button>
+
+        </div>
+
+
+    <!-- ======================================================
+         MARKDOWN RENDERER
+    ======================================================= -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"
+    ></script>
+
+
+    <!-- ======================================================
+         APPLICATION JAVASCRIPT
+    ======================================================= -->
+
+    <script
+        src="/frontend/app.js"
+    ></script>
+
+</body>
+
+</html>

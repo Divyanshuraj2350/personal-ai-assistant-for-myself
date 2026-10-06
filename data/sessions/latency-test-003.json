@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "Explain binary search in simple terms."
+  },
+  {
+    "role": "assistant",
+    "content": "Binary search is a method to find an item in a sorted list quickly. It works by repeatedly dividing the search interval in half. You compare the target with the middle element; if it's smaller, you search the left half, otherwise, you search the right half. This continues until the item is found or the interval is empty. It’s efficient because it halves the search space each time, making it much faster than checking every item one by one."
+  }
+]

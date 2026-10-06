@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "what is binary search"
+  },
+  {
+    "role": "assistant",
+    "content": "Binary search is an efficient algorithm for finding an item in a sorted list. It works by repeatedly dividing the search interval in half. The steps are as follows:\n\n1. Compare the target value to the middle element of the array.\n2. If the target is equal to the middle element, the search is successful.\n3. If the target is less than the middle element, repeat the process on the left half.\n4. If the target is greater than the middle element, repeat the process on the right half.\n5. Continue until the target is found or the interval is empty.\n\nThis approach reduces the number of comparisons needed to find an item, making it significantly faster than linear search for large datasets."
+  }
+]

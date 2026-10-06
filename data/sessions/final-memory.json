@@ -1,0 +1,26 @@
+[
+  {
+    "role": "user",
+    "content": "What was the testing code I told you to remember?"
+  },
+  {
+    "role": "assistant",
+    "content": "I don't have that information. Please provide more context or details about the testing code you mentioned."
+  },
+  {
+    "role": "user",
+    "content": "Remember that my testing code is BLUE-123"
+  },
+  {
+    "role": "assistant",
+    "content": "The testing code you mentioned is **BLUE-123**. Let me know if you need assistance with anything related to it!"
+  },
+  {
+    "role": "user",
+    "content": "What was the testing code I told you to remember?"
+  },
+  {
+    "role": "assistant",
+    "content": "The testing code you mentioned is **BLUE-123**. Let me know if you need assistance with anything related to it!"
+  }
+]

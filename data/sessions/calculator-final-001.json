@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "What is 125 * 4 + 20?"
+  },
+  {
+    "role": "assistant",
+    "content": "The result is 520."
+  }
+]

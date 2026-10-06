@@ -54,5 +54,21 @@
     "subject": "Test Email from My Personal AI",
     "body": "Dear Dayanand,\n\nThis is a test email sent from My Personal AI. Please be informed that this is a routine test to ensure everything is functioning properly.\n\nBest regards,\nMy Personal AI",
     "approved": true
+  },
+  "328edced-efa4-4614-b7dd-9752162874ba": {
+    "status": "pending_approval",
+    "approval_id": "328edced-efa4-4614-b7dd-9752162874ba",
+    "recipient": "test@example.com",
+    "subject": "Hello",
+    "body": "Dear test@example.com,\n\nHello! I hope this message finds you well. I wanted to reach out and say hello. If you have any questions or need further assistance, please feel free to let me know.\n\nBest regards,\n[Your Name]",
+    "approved": false
+  },
+  "859743c2-dd48-4c47-88e3-4b4cb59ad4ba": {
+    "status": "pending_approval",
+    "approval_id": "859743c2-dd48-4c47-88e3-4b4cb59ad4ba",
+    "recipient": "test@example.com",
+    "subject": "Hello",
+    "body": "Dear test@example.com,\n\nHello! I hope this message finds you well. I'm reaching out to say hello and to see if there's anything I can assist you with. Please don't hesitate to let me know if you need further information or support.\n\nBest regards,\n[Your Name]",
+    "approved": false
   }
 }

@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "What is 125 * 4 + 20?"
+  },
+  {
+    "role": "assistant",
+    "content": "```plaintext\n520\n```"
+  }
+]

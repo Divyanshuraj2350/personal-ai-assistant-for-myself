@@ -28,5 +28,17 @@
     "content": "keep my Personal AI project simple.",
     "category": "project",
     "created_at": "2026-08-26T04:38:21.224582"
+  },
+  {
+    "id": "85fc239f-8176-4bd1-9570-70016a02a315",
+    "content": "my testing code is BLUE-123",
+    "category": "general",
+    "created_at": "2026-09-05T01:54:35.757059"
+  },
+  {
+    "id": "087d2fe3-1ce0-4073-9f0b-f9b44d8daaa5",
+    "content": "my favorite testing code is CORE-789.",
+    "category": "preference",
+    "created_at": "2026-09-06T00:01:13.696253"
   }
 ]

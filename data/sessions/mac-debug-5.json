@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "What is 125 * 4 + 20?"
+  },
+  {
+    "role": "assistant",
+    "content": "```python\n125 * 4 + 20\n```\n\n**Result:** 520"
+  }
+]

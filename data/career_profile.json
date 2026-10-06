@@ -34,68 +34,90 @@
 
     "skills": {
         "programming_languages": [
+            "Python",
             "C",
             "C++",
-            "Python",
             "Java",
-            "JavaScript"
+            "JavaScript",
+            "SQL"
         ],
+
         "frameworks": [
             "FastAPI",
             "Node.js",
             "React.js"
         ],
+
         "libraries": [
+            "Pandas",
+            "NumPy",
             "scikit-learn",
-            "Computer Vision"
+            "Computer Vision",
+            "Sentence Transformers"
         ],
+
         "databases": [
             "MySQL",
-            "MongoDB"
+            "MongoDB",
+            "ChromaDB"
         ],
+
         "tools": [
             "Git",
             "GitHub",
             "VS Code",
-            "Ganache",
-            "MetaMask",
-            "Ethers.js"
+            "Ollama"
         ],
+
         "cloud": [],
+
         "networking": [
             "TCP/IP",
-            "Routing/Switching fundamentals",
-            "Wi-Fi protocols",
-            "REST APIs"
+            "Networking fundamentals",
+            "REST API"
         ],
+
         "linux_systems": [
             "Linux/Ubuntu",
             "Bash scripting",
-            "Process management",
-            "Service/daemon workflows"
+            "Process management"
         ],
+
         "ai_machine_learning": [
+            "Machine Learning",
             "Python ML pipelines",
             "scikit-learn",
+            "Random Forest",
             "Computer Vision",
             "LLM APIs",
-            "OpenAI APIs"
+            "Gemini AI",
+            "Qwen3",
+            "Ollama",
+            "RAG",
+            "ChromaDB",
+            "Sentence Transformers"
         ],
+
         "embedded_security": [
-            "Embedded security design",
             "Biometric systems",
             "Authentication architecture"
         ],
+
         "blockchain": [
             "Solidity",
             "Ethereum",
             "Smart Contracts"
         ],
+
         "web": [
             "HTML",
             "CSS"
         ],
-        "other": []
+
+        "other": [
+            "Agile",
+            "OOP"
+        ]
     },
 
     "experience": [
@@ -106,51 +128,61 @@
             "start_date": "Feb 2026",
             "end_date": "Apr 2026",
             "responsibilities": [
-                "Developed and automated ML data preprocessing pipelines in Python.",
-                "Built, trained, and evaluated supervised ML models using scikit-learn, NumPy, and Pandas.",
-                "Analyzed model performance metrics to guide iterative improvements.",
-                "Implemented Python scripts to automate model testing and result logging workflows.",
-                "Collaborated with senior engineers on model deployment workflows."
+                "Built a machine failure prediction model on the AI4I 2020 dataset containing 10,000 records and 6 sensor features using Random Forest.",
+                "Achieved 98.4% accuracy and 95.4% ROC-AUC on a 2,000-record holdout set.",
+                "Identified Torque (30.1%) and Rotational Speed (23.1%) as the top failure predictors through feature importance analysis across 5 failure modes: TWF, HDF, PWF, OSF, and RNF.",
+                "Automated preprocessing and model testing pipelines in Python using Pandas, NumPy, and scikit-learn, reducing manual data preparation effort across multiple datasets.",
+                "Assisted senior engineers with model deployment workflows, gaining hands-on exposure to production ML system integration."
             ]
         }
     ],
 
     "projects": [
         {
+            "name": "AI Software Review Platform",
+            "technologies": [
+                "Python",
+                "FastAPI",
+                "Gemini AI"
+            ],
+            "description": "Built an AI-powered code review platform supporting individual Python files and ZIP-based projects, with automated multi-file analysis across entire codebases. Automated code analysis across readability, performance, security, and maintainability with normalized 0–10 project health scoring. Integrated Google Gemini AI with structured JSON responses to deliver consistent reviews, strengths, weaknesses, suggestions, and quality metrics. Delivered an end-to-end workflow covering file upload, AI analysis, project aggregation, and a web-based dashboard."
+        },
+
+        {
+            "name": "Personal AI Assistant",
+            "technologies": [
+                "Python",
+                "FastAPI",
+                "ChromaDB",
+                "Sentence Transformers"
+            ],
+            "description": "Built a modular AI assistant integrating memory management, RAG, planning, tool execution, and unified context generation. Developed an end-to-end RAG pipeline using overlapping chunking and vector-based retrieval via ChromaDB with metadata traceability. Designed a planner-executor architecture supporting workflows including calculations, web search, job analysis, email drafting, approval handling, and AI conversation."
+        },
+
+        {
+            "name": "Predictive Maintenance ML System",
+            "technologies": [
+                "Python",
+                "scikit-learn",
+                "Random Forest",
+                "Pandas"
+            ],
+            "description": "Built a machine failure prediction system on the AI4I 2020 industrial dataset containing 10,000 records and a 3.39% failure rate using Random Forest. Achieved 98.4% accuracy and 95.4% ROC-AUC across 5 failure mode categories. Engineered features from 6 sensor inputs and performed feature importance analysis identifying Torque and Rotational Speed as dominant failure drivers."
+        },
+
+        {
             "name": "AI-Based Parental Control System",
             "technologies": [
                 "Python",
                 "Computer Vision",
-                "FastAPI",
-                "Android Security"
+                "FastAPI"
             ],
-            "description": "Intelligent security system using facial recognition, OTP-based access control, secure biometric storage, and a FastAPI backend for authentication, activity logging, and uninstall protection."
-        },
-        {
-            "name": "AI Code Review Assistant",
-            "technologies": [
-                "Python",
-                "FastAPI",
-                "LLM APIs",
-                "REST"
-            ],
-            "description": "Python-based automation tool using LLM APIs to analyze source code and provide categorized, actionable feedback with a FastAPI backend and interactive review dashboard."
-        },
-        {
-            "name": "WarrantyChain – Blockchain Warranty & Ownership Verification",
-            "technologies": [
-                "Solidity",
-                "Ethereum",
-                "React.js",
-                "Node.js",
-                "Ethers.js"
-            ],
-            "description": "Decentralized application for warranty registration, verification, and ownership transfer using Solidity smart contracts, MetaMask authentication, React.js, Node.js, and Ethers.js."
+            "description": "Built a facial recognition system that automatically switches device access modes based on the detected user, replacing manual parental controls. Implemented multi-layer authentication combining face verification, OTP-based access control, and secure biometric data storage. Developed a FastAPI backend on Linux for authentication, activity logging, and uninstall protection; tested and closed bypass vulnerabilities."
         }
     ],
 
     "certifications": [
-        "Machine Learning Internship Certificate – Pratinik Infotech",
+        "Certificate of Internship – Machine Learning, Pratinik Infotech",
         "Machine Learning and AI Foundations: Prediction, Causation and Statistical Inference – LinkedIn Learning",
         "Practical Cybersecurity for IT Professionals – LinkedIn Learning",
         "Introduction to Identity and Access Management (IAM) – LinkedIn Learning",
@@ -160,9 +192,7 @@
     ],
 
     "achievements": [
-        "Secured Top 23 position at Hackaphasia Hackathon 2025 among 200+ teams.",
-        "Participated in AmBITion Hackathon 2025 and built a functional prototype under a 24-hour constraint.",
-        "Active participant in technical coding challenges, project-based competitions, and open-source learning programs."
+        "Secured Top 10% finish (23rd of 200+ teams) at Hackaphasia Hackathon 2025 – systems and AI-focused challenge."
     ],
 
     "soft_skills": [
@@ -177,9 +207,11 @@
     ],
 
     "preferred_roles": [
-        "Software Engineer",
+        "Data Scientist",
+        "Machine Learning Engineer",
         "AI/ML Engineer",
         "AI Engineer",
+        "Software Engineer",
         "Python Developer"
     ],
 

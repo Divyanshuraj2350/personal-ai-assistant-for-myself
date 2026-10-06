@@ -369,6 +369,46 @@ def search_documents(
     return formatted_results
 
 
+def get_document_chunks(document_id):
+    """
+    Return all chunks belonging to one RAG document in chunk order.
+    """
+    if not document_id:
+        return []
+
+    try:
+        results = collection.get(
+            where={"document_id": document_id},
+            include=["documents", "metadatas"],
+        )
+    except Exception:
+        return []
+
+    documents = results.get("documents") or []
+    metadatas = results.get("metadatas") or []
+
+    chunks = []
+
+    for content, metadata in zip(documents, metadatas):
+        if not content:
+            continue
+
+        metadata = metadata or {}
+
+        chunks.append(
+            {
+                "content": content,
+                "metadata": metadata,
+                "distance": None,
+            }
+        )
+
+    chunks.sort(
+        key=lambda item: item["metadata"].get("chunk_index", 0)
+    )
+
+    return chunks
+
 # ============================================================
 # DELETE SOURCE DOCUMENT
 # ============================================================

@@ -1,10 +1,16 @@
 import json
-
 import httpx
 
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL_NAME = "qwen3:8b"
+
+# Keep the prompt small enough for Qwen3:8b on a laptop.
+MAX_ANALYSIS_CONTENT = 4500
+
+# Maximum number of generated tokens.
+# The requested JSON is relatively small.
+MAX_OUTPUT_TOKENS = 2048
 
 
 def _empty_result():
@@ -25,39 +31,34 @@ def _empty_result():
     }
 
 
-def _clean_analysis_value(
-    value,
-    expected_type,
-):
+def _clean_analysis_value(value, expected_type):
     """
-    Keep analyzer output predictable.
-
-    Lists must remain lists.
-    Scalar fields may be None or strings.
+    Normalize one field returned by Qwen.
     """
 
     if expected_type == "list":
 
-        if not isinstance(
-            value,
-            list,
-        ):
+        if not isinstance(value, list):
             return []
 
-        return [
-            str(item).strip()
-            for item in value
-            if item is not None
-            and str(item).strip()
-        ]
+        cleaned = []
+
+        for item in value:
+
+            if item is None:
+                continue
+
+            text = str(item).strip()
+
+            if text:
+                cleaned.append(text)
+
+        return cleaned
 
     if value is None:
         return None
 
-    if isinstance(
-        value,
-        str,
-    ):
+    if isinstance(value, str):
 
         value = value.strip()
 
@@ -66,10 +67,7 @@ def _clean_analysis_value(
     return str(value)
 
 
-def _normalize_analysis(
-    analysis,
-    source_url,
-):
+def _normalize_analysis(analysis, source_url):
     """
     Normalize Qwen output into the application's
     expected job schema.
@@ -96,11 +94,7 @@ def _normalize_analysis(
         "application_url",
     }
 
-    if not isinstance(
-        analysis,
-        dict,
-    ):
-
+    if not isinstance(analysis, dict):
         return result
 
     for field in list_fields:
@@ -117,24 +111,17 @@ def _normalize_analysis(
             "scalar",
         )
 
-    # Always preserve the original URL if the model
-    # failed to return an application URL.
-
+    # Never lose the original source URL.
     if not result["application_url"]:
-
-        result[
-            "application_url"
-        ] = source_url
+        result["application_url"] = source_url
 
     return result
 
 
-def _has_meaningful_job_information(
-    result
-):
+def _has_meaningful_job_information(result):
     """
-    Prevent an apparently successful analysis
-    when Qwen returned almost no job information.
+    Prevent empty/meaningless Qwen responses from being
+    treated as successful analyses.
     """
 
     important_fields = [
@@ -155,10 +142,7 @@ def _has_meaningful_job_information(
 
     for value in important_fields:
 
-        if isinstance(
-            value,
-            list,
-        ):
+        if isinstance(value, list):
 
             if value:
                 non_empty += 1
@@ -167,19 +151,170 @@ def _has_meaningful_job_information(
 
             non_empty += 1
 
-    # Company + position alone is not enough.
+    return non_empty >= 2
 
-    if non_empty < 2:
-        return False
 
-    return True
+def _parse_json_response(text):
+    """
+    Safely parse JSON returned by Ollama.
+    """
+
+    if not text:
+        return None
+
+    text = text.strip()
+
+    # Remove accidental markdown fences.
+    if text.startswith("```"):
+
+        lines = text.splitlines()
+
+        if lines:
+            lines = lines[1:]
+
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+
+        text = "\n".join(lines).strip()
+
+        if text.lower().startswith("json"):
+            text = text[4:].strip()
+
+    try:
+        return json.loads(text)
+
+    except json.JSONDecodeError:
+
+        # Try to recover the first JSON object.
+        start = text.find("{")
+        end = text.rfind("}")
+
+        if start == -1 or end == -1 or end <= start:
+            return None
+
+        try:
+
+            return json.loads(
+                text[start:end + 1]
+            )
+
+        except json.JSONDecodeError:
+
+            return None
+
+
+async def call_qwen(prompt):
+    """
+    Send one prompt to local Qwen through Ollama.
+
+    Important:
+    - thinking disabled
+    - JSON mode enabled
+    - output token count limited
+    """
+
+    payload = {
+        "model": MODEL_NAME,
+
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You extract structured job information. "
+                    "Use only the supplied job posting. "
+                    "Never invent missing information."
+                ),
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+
+        "stream": False,
+
+        # Important for Qwen3.
+        "think": False,
+
+        # Ask Ollama for JSON.
+        "format": "json",
+
+        "options": {
+            "temperature": 0,
+            "num_predict": MAX_OUTPUT_TOKENS,
+        },
+    }
+
+    try:
+
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(
+                connect=10.0,
+                read=90.0,
+                write=30.0,
+                pool=30.0,
+            )
+        ) as client:
+
+            response = await client.post(
+                OLLAMA_URL,
+                json=payload,
+            )
+
+            response.raise_for_status()
+
+            data = response.json()
+
+    except httpx.TimeoutException as exc:
+
+        raise RuntimeError(
+            "Qwen HTTP request timed out."
+        ) from exc
+
+    except Exception as exc:
+
+        raise RuntimeError(
+            f"Could not contact Qwen: {exc}"
+        ) from exc
+
+    message = data.get(
+        "message",
+        {},
+    )
+
+    content = message.get(
+        "content",
+        "",
+    )
+
+    if not content:
+
+        raise RuntimeError(
+            "Qwen returned an empty response."
+        )
+
+    
+    parsed = _parse_json_response(content)
+
+    if parsed is None:
+        print("\n[DEBUG] Qwen raw response:")
+        print(repr(content))
+        print("\n[DEBUG] End of Qwen response\n")
+
+        raise RuntimeError(
+            "Qwen returned invalid JSON."
+        )
+
+
+    return parsed
 
 
 async def analyze_job(job_data):
     """
-    Analyze a fetched job page with Qwen.
+    Analyze a fetched job page using local Qwen3:8b.
 
-    The analyzer never invents missing information.
+    The model receives a shortened version of the job
+    content to avoid very slow inference on a laptop.
     """
 
     if not job_data:
@@ -189,11 +324,7 @@ async def analyze_job(job_data):
             "error": "No job data provided.",
         }
 
-    job_status = job_data.get(
-        "status"
-    )
-
-    if job_status != "success":
+    if job_data.get("status") != "success":
 
         return {
             "status": "error",
@@ -201,7 +332,6 @@ async def analyze_job(job_data):
                 "error",
                 "Could not read the job page.",
             ),
-            "fetch_status": job_status,
         }
 
     url = job_data.get(
@@ -224,235 +354,139 @@ async def analyze_job(job_data):
         return {
             "status": "error",
             "error": (
-                "The job page contains no readable "
-                "content."
+                "The job page contains no readable content."
             ),
         }
 
-    # ------------------------------------------------------
-    # Protect against pages that only say "Loading..."
-    # ------------------------------------------------------
+    content = str(content).strip()
 
-    normalized_content = (
-        str(content)
-        .strip()
-        .lower()
-    )
-
-    if (
-        normalized_content == "loading..."
-        or len(normalized_content) < 100
-    ):
+    if len(content) < 100:
 
         return {
             "status": "error",
             "error": (
-                "The page does not contain enough "
-                "job-description content. "
-                "Provide the actual job description "
-                "URL if this is an application page."
+                "The job page does not contain enough "
+                "job-description content."
             ),
         }
 
+    # ------------------------------------------------------
+    # IMPORTANT:
+    # Reduce the amount of text sent to Qwen.
+    # ------------------------------------------------------
+
+    original_length = len(content)
+
+    if len(content) > MAX_ANALYSIS_CONTENT:
+
+        content = (
+            content[:MAX_ANALYSIS_CONTENT]
+            + "\n[JOB CONTENT TRUNCATED]"
+        )
+
+    print(
+        f"[JOB ANALYZER] Original content: "
+        f"{original_length} chars"
+    )
+
+    print(
+        f"[JOB ANALYZER] Qwen content: "
+        f"{len(content)} chars"
+    )
+
+    # ------------------------------------------------------
+    # Small structured prompt.
+    # ------------------------------------------------------
+
     prompt = f"""
-Analyze the following job posting.
+Extract structured information from this job posting.
 
-JOB PAGE URL:
-{url}
+RULES:
+1. Use ONLY the supplied text.
+2. Do NOT invent missing information.
+3. If information is missing, use null or [].
+4. Return ONLY valid JSON.
+5. Keep lists short and factual.
+6. Do not write explanations outside the JSON.
 
-PAGE TITLE:
-{title}
-
-JOB PAGE CONTENT:
-{content}
-
-Extract only information that is actually supported
-by the job posting.
-
-Do NOT guess or invent information.
-
-Return ONLY valid JSON in exactly this structure:
+Return exactly this structure:
 
 {{
-    "company": null,
-    "position": null,
-    "location": null,
-    "work_mode": null,
-    "experience": [],
-    "education": [],
-    "required_skills": [],
-    "preferred_skills": [],
-    "responsibilities": [],
-    "tech_stack": [],
-    "salary": null,
-    "visa_sponsorship": null,
-    "application_url": null
+  "company": null,
+  "position": null,
+  "location": null,
+  "work_mode": null,
+  "experience": [],
+  "education": [],
+  "required_skills": [],
+  "preferred_skills": [],
+  "responsibilities": [],
+  "tech_stack": [],
+  "salary": null,
+  "visa_sponsorship": null,
+  "application_url": null
 }}
 
-Rules:
+JOB TITLE:
+{title}
 
-1. company:
-   Extract the company name.
+JOB URL:
+{url}
 
-2. position:
-   Extract the exact job title.
-
-3. location:
-   Extract the stated job location.
-   If not stated, return null.
-
-4. work_mode:
-   Extract remote, hybrid, onsite, or another
-   explicitly stated work arrangement.
-   If not stated, return null.
-
-5. experience:
-   Include explicit experience requirements.
-
-6. education:
-   Include explicit education requirements.
-
-7. required_skills:
-   Include skills explicitly required by the role.
-
-8. preferred_skills:
-   Include skills described as preferred,
-   helpful, nice-to-have, or advantageous.
-
-9. responsibilities:
-   Extract the main responsibilities.
-
-10. tech_stack:
-    Extract named technologies, programming languages,
-    frameworks, databases, cloud platforms,
-    infrastructure tools, and similar technologies.
-
-11. salary:
-    Extract the stated salary or salary range.
-
-12. visa_sponsorship:
-    Extract only explicit visa sponsorship information.
-
-13. application_url:
-    Use the supplied URL if it is the job/application page.
-
-IMPORTANT:
-
-- Never infer a technology merely because it is common
-  for the role.
-- Never invent experience requirements.
-- Never invent education requirements.
-- Never convert a missing value into a guess.
-- Use [] for missing list fields.
-- Use null for missing scalar fields.
+JOB CONTENT:
+{content}
 """
 
-    payload = {
-        "model": MODEL_NAME,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are a job description analysis assistant. "
-                    "Extract structured information accurately. "
-                    "Never invent missing information. "
-                    "Return only valid JSON."
-                ),
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
-        "stream": False,
-        "think": False,
-        "format": "json",
-        "options": {
-            "temperature": 0.1,
-        },
-    }
+    print(
+        f"[JOB ANALYZER] Prompt length: "
+        f"{len(prompt)} chars"
+    )
+
+    print(
+        f"[JOB ANALYZER] Sending request to "
+        f"{MODEL_NAME}..."
+    )
 
     try:
 
-        async with httpx.AsyncClient(
-            timeout=None
-        ) as client:
-
-            response = await client.post(
-                OLLAMA_URL,
-                json=payload,
-            )
-
-            response.raise_for_status()
-
-            data = response.json()
+        analysis = await call_qwen(
+            prompt
+        )
 
     except Exception as exc:
 
+        print(
+            f"[JOB ANALYZER] Qwen error: {exc}"
+        )
+
         return {
             "status": "error",
-            "error": (
-                f"Job analysis failed: {exc}"
-            ),
+            "error": str(exc),
         }
 
-    model_content = (
-        data.get(
-            "message",
-            {}
-        ).get(
-            "content",
-            "",
-        )
+    print(
+        "[JOB ANALYZER] Qwen analysis completed."
     )
 
-    if not model_content:
-
-        return {
-            "status": "error",
-            "error": (
-                "Qwen returned an empty analysis."
-            ),
-        }
-
-    try:
-
-        analysis = json.loads(
-            model_content
-        )
-
-    except json.JSONDecodeError:
-
-        return {
-            "status": "error",
-            "error": (
-                "Qwen returned invalid JSON."
-            ),
-            "raw": model_content,
-        }
-
-    result = _normalize_analysis(
+    normalized = _normalize_analysis(
         analysis,
         url,
     )
 
     if not _has_meaningful_job_information(
-        result
+        normalized
     ):
 
         return {
             "status": "error",
             "error": (
-                "The page did not contain enough "
-                "job information to build a reliable "
-                "analysis. The URL may be an application "
-                "page rather than the actual job description."
+                "Qwen returned insufficient "
+                "job information."
             ),
-            "job": result,
         }
 
     return {
         "status": "success",
+        "job": normalized,
         "source_url": url,
-        "job": result,
     }

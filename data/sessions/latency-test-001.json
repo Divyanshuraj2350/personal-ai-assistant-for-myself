@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "Explain binary search in simple terms."
+  },
+  {
+    "role": "assistant",
+    "content": "Binary search is a method for finding a specific item in a **sorted list** of items. It works by repeatedly dividing the search interval in half, which makes it very efficient.\n\n### How Binary Search Works:\n1. Start with the entire sorted list.\n2. Find the middle element of the list.\n3. Compare the middle element to the target value you're looking for:\n   - If they are equal, you've found the item.\n   - If the middle element is **less than** the target, search the **right half** of the list (since the list is sorted).\n   - If the middle element is **greater than** the target, search the **left half** of the list.\n4. Repeat this process until you find the item or determine it's not in the list.\n\n### Example:\nImagine a list: `[10, 20, 30, 40, 50]`, and you're looking for `40`.\n- Middle element is `30` (less than `40`) → search right half.\n- New middle is `40` → found!\n\n### Why It's Efficient:\nBinary search reduces the number of comparisons needed to find an item by **halving** the search space each time. This makes it much faster than a linear search, especially for large lists.\n\n### Time Complexity:\n- Best Case: $ O(1) $\n- Average and Worst Case: $ O(\\log n) $\n\nThis method is widely used in computer science because of its efficiency."
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "content": "For this conversation, call my project Atlas."
+  },
+  {
+    "role": "assistant",
+    "content": "Got it! Your project is now called **Atlas**. Let me know how I can assist you with your CSE-focused work on Atlas."
+  },
+  {
+    "role": "user",
+    "content": "What did I call my project?"
+  },
+  {
+    "role": "assistant",
+    "content": "Your project is called **Atlas**."
+  }
+]

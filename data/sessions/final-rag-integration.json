@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "According to my Personal AI documentation, what is the main purpose of the Personal AI core?"
+  },
+  {
+    "role": "assistant",
+    "content": "The main purpose of the Personal AI core is to serve as the foundational architecture for a unified AI assistant. This core is designed to support both web and mobile platforms and includes essential components such as a local language model, short-term and persistent memory systems, RAG knowledge retrieval, planning, tool execution, and unified context building. The core's primary focus is to ensure the AI assistant can effectively combine information from various systems to provide coherent and contextually relevant responses."
+  }
+]

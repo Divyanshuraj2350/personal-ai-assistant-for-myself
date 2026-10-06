@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 from urllib.parse import urljoin
@@ -6,341 +7,297 @@ import httpx
 from bs4 import BeautifulSoup
 
 
-MAX_JOB_CONTENT_LENGTH = 20000
-MIN_MEANINGFUL_CONTENT_LENGTH = 250
-
+# ==========================================================
+# CONFIGURATION
+# ==========================================================
 
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/151.0.0.0 Safari/537.36"
+    "Chrome/153.0.0.0 Safari/537.36"
 )
 
+MAX_JOB_CONTENT_LENGTH = 20000
+
+HTTP_CONNECT_TIMEOUT = 4.0
+HTTP_READ_TIMEOUT = 6.0
+HTTP_WRITE_TIMEOUT = 4.0
+HTTP_POOL_TIMEOUT = 4.0
+HTTP_TOTAL_TIMEOUT = 10.0
+
+BROWSER_NAVIGATION_TIMEOUT = 15000
+BROWSER_RENDER_WAIT = 1000
+
+
+# ==========================================================
+# TEXT CLEANING
+# ==========================================================
 
 def clean_job_text(text):
     """
-    Normalize extracted job text.
+    Normalize extracted job-page text.
     """
 
     if not text:
         return ""
 
-    text = re.sub(r"\s+", " ", str(text))
+    text = re.sub(
+        r"\s+",
+        " ",
+        text,
+    )
 
     return text.strip()
 
 
-def _is_meaningful_job_content(text):
-    """
-    Determine whether the fetched page contains enough
-    readable content to reasonably represent a job posting.
+# ==========================================================
+# TITLE EXTRACTION
+# ==========================================================
 
-    Pages containing only:
-        Loading...
-        Apply...
-        JavaScript shell text
-    are not considered valid JD content.
+def _extract_title(html):
+    """
+    Extract the page title.
     """
 
-    if not text:
-        return False
+    if not html:
+        return ""
 
-    normalized = clean_job_text(text).lower()
+    try:
 
-    if len(normalized) < MIN_MEANINGFUL_CONTENT_LENGTH:
-        return False
+        soup = BeautifulSoup(
+            html,
+            "html.parser",
+        )
 
-    loading_patterns = [
-        "loading...",
-        "please wait...",
-        "enable javascript",
-        "javascript is required",
-        "loading job",
-    ]
+        if soup.title:
 
-    for pattern in loading_patterns:
+            return clean_job_text(
+                soup.title.get_text(" ")
+            )
 
-        if normalized == pattern:
-            return False
+    except Exception:
+        pass
 
-        if (
-            len(normalized) < 500
-            and pattern in normalized
-        ):
-            return False
+    return ""
 
-    return True
 
+# ==========================================================
+# JSON-LD EXTRACTION
+# ==========================================================
 
 def _extract_json_ld(soup):
     """
-    Extract useful information from JSON-LD blocks.
-
-    Many job sites expose JobPosting information through
-    application/ld+json even when the visible page is dynamic.
+    Extract JSON-LD structured data.
     """
 
     records = []
 
-    scripts = soup.find_all(
-        "script",
-        type="application/ld+json",
-    )
+    try:
 
-    for script in scripts:
+        scripts = soup.find_all(
+            "script",
+            type="application/ld+json",
+        )
 
-        raw = script.string or script.get_text()
+        for script in scripts:
 
-        if not raw:
-            continue
+            raw = script.string
 
-        try:
+            if not raw:
+                raw = script.get_text()
 
-            data = json.loads(raw)
+            if not raw:
+                continue
 
-        except (json.JSONDecodeError, TypeError):
+            try:
 
-            continue
+                data = json.loads(raw)
 
-        if isinstance(data, list):
+                if isinstance(data, list):
 
-            records.extend(data)
+                    records.extend(data)
 
-        elif isinstance(data, dict):
+                else:
 
-            records.append(data)
+                    records.append(data)
+
+            except Exception:
+
+                continue
+
+    except Exception:
+
+        pass
 
     return records
 
 
-def _json_ld_to_text(records):
+# ==========================================================
+# METADATA EXTRACTION
+# ==========================================================
+
+def _extract_metadata(soup):
     """
-    Convert useful JSON-LD job information into readable text.
+    Extract useful metadata from a page.
     """
 
-    parts = []
+    metadata = []
 
-    for record in records:
+    try:
 
-        if not isinstance(record, dict):
-            continue
-
-        record_type = record.get("@type")
-
-        if isinstance(record_type, list):
-
-            is_job = "JobPosting" in record_type
-
-        else:
-
-            is_job = record_type == "JobPosting"
-
-        if not is_job:
-            continue
-
-        fields = [
-            ("title", record.get("title")),
-            ("description", record.get("description")),
-            ("datePosted", record.get("datePosted")),
-            ("employmentType", record.get("employmentType")),
-        ]
-
-        for label, value in fields:
-
-            if not value:
-                continue
-
-            if isinstance(value, dict):
-
-                value = json.dumps(
-                    value,
-                    ensure_ascii=False,
-                )
-
-            elif isinstance(value, list):
-
-                value = " ".join(
-                    str(item)
-                    for item in value
-                )
-
-            parts.append(
-                f"{label}: {value}"
-            )
-
-        hiring_organization = record.get(
-            "hiringOrganization"
-        )
-
-        if isinstance(
-            hiring_organization,
-            dict,
+        for tag in soup.find_all(
+            "meta"
         ):
 
-            name = hiring_organization.get(
-                "name"
+            name = (
+                tag.get("name")
+                or tag.get("property")
+                or tag.get("itemprop")
+                or ""
             )
 
-            if name:
-                parts.append(
-                    f"company: {name}"
-                )
-
-        location = record.get(
-            "jobLocation"
-        )
-
-        if location:
-
-            if isinstance(location, list):
-
-                location = " ".join(
-                    json.dumps(
-                        item,
-                        ensure_ascii=False,
-                    )
-                    for item in location
-                )
-
-            else:
-
-                location = json.dumps(
-                    location,
-                    ensure_ascii=False,
-                )
-
-            parts.append(
-                f"location: {location}"
+            content = (
+                tag.get("content")
+                or ""
             )
 
-    return clean_job_text(
-        " ".join(parts)
-    )
+            if not content:
+                continue
+
+            name = name.strip()
+
+            if name.lower() in {
+                "description",
+                "og:title",
+                "og:description",
+                "twitter:title",
+                "twitter:description",
+                "description",
+            }:
+
+                metadata.append(
+                    clean_job_text(content)
+                )
+
+    except Exception:
+
+        pass
+
+    return metadata
 
 
-def _extract_meta_text(soup):
-    """
-    Extract useful metadata from the page.
-    """
-
-    values = []
-
-    selectors = [
-        ("meta[name='description']", "content"),
-        ("meta[property='og:title']", "content"),
-        ("meta[property='og:description']", "content"),
-    ]
-
-    for selector, attribute in selectors:
-
-        element = soup.select_one(selector)
-
-        if not element:
-            continue
-
-        value = element.get(attribute)
-
-        if value:
-            values.append(
-                clean_job_text(value)
-            )
-
-    return values
-
-
-def _extract_links(soup, base_url):
-    """
-    Extract potentially useful links from the page.
-
-    Particularly useful for:
-        Google Drive
-        job descriptions
-        application pages
-        company career pages
-    """
-
-    links = []
-
-    for anchor in soup.find_all("a"):
-
-        href = anchor.get("href")
-
-        if not href:
-            continue
-
-        absolute_url = urljoin(
-            base_url,
-            href,
-        )
-
-        text = clean_job_text(
-            anchor.get_text(" ")
-        )
-
-        links.append(
-            {
-                "text": text,
-                "url": absolute_url,
-            }
-        )
-
-    # Remove duplicates while preserving order.
-
-    unique = []
-    seen = set()
-
-    for item in links:
-
-        url = item["url"]
-
-        if url in seen:
-            continue
-
-        seen.add(url)
-        unique.append(item)
-
-    return unique
-
+# ==========================================================
+# PAGE CONTENT EXTRACTION
+# ==========================================================
 
 def _extract_page_content(
-    html_content,
-    page_url,
+    html,
+    base_url="",
 ):
     """
-    Extract readable content without throwing away
-    structured data first.
+    Extract readable content, links and JSON-LD
+    from a job page.
     """
 
-    soup = BeautifulSoup(
-        html_content,
-        "html.parser",
-    )
+    if not html:
+
+        return {
+            "content": "",
+            "links": [],
+            "json_ld": [],
+        }
+
+    try:
+
+        soup = BeautifulSoup(
+            html,
+            "html.parser",
+        )
+
+    except Exception:
+
+        return {
+            "content": "",
+            "links": [],
+            "json_ld": [],
+        }
+
+    # ------------------------------------------------------
+    # JSON-LD
+    # ------------------------------------------------------
 
     json_ld_records = _extract_json_ld(
         soup
     )
 
-    json_ld_text = _json_ld_to_text(
-        json_ld_records
-    )
+    json_ld_text = ""
 
-    metadata = _extract_meta_text(
+    if json_ld_records:
+
+        try:
+
+            json_ld_text = json.dumps(
+                json_ld_records,
+                ensure_ascii=False,
+            )
+
+        except Exception:
+
+            json_ld_text = ""
+
+    # ------------------------------------------------------
+    # Metadata
+    # ------------------------------------------------------
+
+    metadata = _extract_metadata(
         soup
     )
 
-    links = _extract_links(
-        soup,
-        page_url,
-    )
+    # ------------------------------------------------------
+    # Links
+    # ------------------------------------------------------
 
-    # Make a copy for normal text extraction.
+    links = []
+
+    try:
+
+        for element in soup.find_all(
+            "a",
+            href=True,
+        ):
+
+            href = element.get(
+                "href"
+            )
+
+            if not href:
+                continue
+
+            absolute_url = urljoin(
+                base_url,
+                href,
+            )
+
+            if absolute_url not in links:
+
+                links.append(
+                    absolute_url
+                )
+
+    except Exception:
+
+        pass
+
+    # ------------------------------------------------------
+    # Remove useless HTML
+    # ------------------------------------------------------
 
     text_soup = BeautifulSoup(
-        html_content,
+        html,
         "html.parser",
     )
 
-    for element in text_soup(
+    for element in text_soup.find_all(
         [
             "script",
             "style",
@@ -354,21 +311,34 @@ def _extract_page_content(
 
         element.decompose()
 
+    # ------------------------------------------------------
+    # Readable body text
+    # ------------------------------------------------------
+
     body_text = clean_job_text(
         text_soup.get_text(" ")
     )
 
+    # ------------------------------------------------------
+    # Combine useful content
+    # ------------------------------------------------------
+
     parts = []
 
     if json_ld_text:
+
         parts.append(
             json_ld_text
         )
 
     if metadata:
-        parts.extend(metadata)
+
+        parts.extend(
+            metadata
+        )
 
     if body_text:
+
         parts.append(
             body_text
         )
@@ -377,7 +347,14 @@ def _extract_page_content(
         " ".join(parts)
     )
 
-    if len(combined_text) > MAX_JOB_CONTENT_LENGTH:
+    # ------------------------------------------------------
+    # Limit content size
+    # ------------------------------------------------------
+
+    if (
+        len(combined_text)
+        > MAX_JOB_CONTENT_LENGTH
+    ):
 
         combined_text = (
             combined_text[
@@ -393,9 +370,58 @@ def _extract_page_content(
     }
 
 
+# ==========================================================
+# JOB CONTENT VALIDATION
+# ==========================================================
+
+def _is_meaningful_job_content(
+    content
+):
+    """
+    Determine whether extracted page content
+    contains enough information to be useful.
+    """
+
+    if not content:
+        return False
+
+    text = content.lower()
+
+    if len(content) < 500:
+        return False
+
+    job_keywords = [
+        "job",
+        "career",
+        "employment",
+        "responsibilities",
+        "qualifications",
+        "requirements",
+        "experience",
+        "skills",
+        "machine learning",
+        "software engineer",
+        "data scientist",
+        "artificial intelligence",
+        "apply",
+    ]
+
+    matches = sum(
+        1
+        for keyword in job_keywords
+        if keyword in text
+    )
+
+    return matches >= 2
+
+
+# ==========================================================
+# HTTP FETCH
+# ==========================================================
+
 async def _fetch_with_httpx(url):
     """
-    Normal HTTP fetch.
+    Normal HTTP fetch with a hard timeout.
     """
 
     headers = {
@@ -407,17 +433,23 @@ async def _fetch_with_httpx(url):
         "Accept-Language": (
             "en-US,en;q=0.9"
         ),
+        "Cache-Control": "no-cache",
     }
 
+    timeout = httpx.Timeout(
+        connect=3.0,
+        read=7.0,
+        write=5.0,
+        pool=3.0,
+    )
+
     async with httpx.AsyncClient(
-        timeout=30,
+        timeout=timeout,
         follow_redirects=True,
         headers=headers,
     ) as client:
 
-        response = await client.get(
-            url
-        )
+        response = await client.get(url)
 
         response.raise_for_status()
 
@@ -427,14 +459,15 @@ async def _fetch_with_httpx(url):
         )
 
 
+# ==========================================================
+# BROWSER FETCH
+# ==========================================================
+
 async def _fetch_with_browser(url):
     """
     Render JavaScript-heavy job pages.
 
-    Playwright is optional.
-
-    If it is not installed, the caller can still
-    use the normal HTTP response.
+    Uses DOMContentLoaded rather than networkidle.
     """
 
     try:
@@ -445,8 +478,10 @@ async def _fetch_with_browser(url):
 
     except ImportError:
 
-        return None, None, (
-            "Playwright is not installed."
+        return (
+            None,
+            None,
+            "Playwright is not installed.",
         )
 
     try:
@@ -457,34 +492,37 @@ async def _fetch_with_browser(url):
                 headless=True
             )
 
-            page = await browser.new_page(
-                user_agent=USER_AGENT
-            )
+            try:
 
-            await page.goto(
-                url,
-                wait_until="networkidle",
-                timeout=45000,
-            )
+                page = await browser.new_page(
+                    user_agent=USER_AGENT
+                )
 
-            # Give client-side applications a little
-            # additional time to render their content.
+                await page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=7000,
+                )
 
-            await page.wait_for_timeout(
-                2000
-            )
+                await page.wait_for_timeout(
+                    500
+                )
 
-            rendered_html = await page.content()
+                rendered_html = (
+                    await page.content()
+                )
 
-            final_url = page.url
+                final_url = page.url
 
-            await browser.close()
+                return (
+                    final_url,
+                    rendered_html,
+                    None,
+                )
 
-            return (
-                final_url,
-                rendered_html,
-                None,
-            )
+            finally:
+
+                await browser.close()
 
     except Exception as exc:
 
@@ -495,6 +533,10 @@ async def _fetch_with_browser(url):
         )
 
 
+# ==========================================================
+# MAIN JOB PAGE FETCHER
+# ==========================================================
+
 async def fetch_job_page(url):
     """
     Fetch a job/application page.
@@ -503,9 +545,8 @@ async def fetch_job_page(url):
 
     1. Normal HTTP request.
     2. Extract readable text and structured data.
-    3. If the page is JavaScript-heavy or only contains
-       loading text, attempt browser rendering.
-    4. Return useful diagnostics if no real JD exists.
+    3. If HTTP content is insufficient, use browser rendering.
+    4. Never allow one bad URL to crash the entire pipeline.
     """
 
     if not url:
@@ -515,11 +556,72 @@ async def fetch_job_page(url):
             "error": "No job URL provided.",
         }
 
+    # ======================================================
+    # PASS 1: NORMAL HTTP
+    # ======================================================
+
     try:
 
         final_url, html_content = (
             await _fetch_with_httpx(url)
         )
+
+    except asyncio.CancelledError:
+
+        raise
+
+    except Exception as exc:
+
+        print(
+            f"[JOB FETCHER] HTTP failed: {url}"
+        )
+
+        print(
+            f"[JOB FETCHER] Reason: {exc}"
+        )
+
+        # --------------------------------------------------
+        # HTTP failed.
+        #
+        # Try browser rendering as a fallback.
+        # --------------------------------------------------
+
+        (
+            browser_url,
+            browser_html,
+            browser_error,
+        ) = await _fetch_with_browser(
+            url
+        )
+
+        if browser_html:
+
+            final_url = (
+                browser_url
+                or url
+            )
+
+            html_content = (
+                browser_html
+            )
+
+        else:
+
+            return {
+                "status": "error",
+                "url": url,
+                "error": (
+                    f"HTTP fetch failed: {exc}; "
+                    f"Browser fallback failed: "
+                    f"{browser_error}"
+                ),
+            }
+
+    # ======================================================
+    # PASS 2: EXTRACT HTTP/BROWSER CONTENT
+    # ======================================================
+
+    try:
 
         extracted = _extract_page_content(
             html_content,
@@ -550,25 +652,43 @@ async def fetch_job_page(url):
                 "rendered": False,
             }
 
-        # --------------------------------------------------
-        # HTTP content was insufficient.
-        # Try a real browser for JavaScript-heavy pages.
-        # --------------------------------------------------
+    except Exception as exc:
+
+        print(
+            f"[JOB FETCHER] Extraction failed: "
+            f"{final_url}"
+        )
+
+        print(
+            f"[JOB FETCHER] Reason: {exc}"
+        )
+
+
+    # ======================================================
+    # PASS 3: BROWSER FALLBACK
+    # ======================================================
+
+    try:
 
         (
             browser_url,
             browser_html,
             browser_error,
         ) = await _fetch_with_browser(
-            url
+            final_url
         )
 
         if browser_html:
 
+            browser_final_url = (
+                browser_url
+                or final_url
+            )
+
             browser_extracted = (
                 _extract_page_content(
                     browser_html,
-                    browser_url,
+                    browser_final_url,
                 )
             )
 
@@ -584,11 +704,13 @@ async def fetch_job_page(url):
 
                 return {
                     "status": "success",
-                    "url": browser_url,
+                    "url": browser_final_url,
                     "title": _extract_title(
                         browser_html
                     ),
-                    "content": browser_content,
+                    "content": (
+                        browser_content
+                    ),
                     "links": (
                         browser_extracted[
                             "links"
@@ -602,63 +724,30 @@ async def fetch_job_page(url):
                     "rendered": True,
                 }
 
+        # --------------------------------------------------
+        # Browser was attempted but no useful content.
+        # --------------------------------------------------
+
         return {
-            "status": "insufficient_content",
+            "status": "error",
             "url": final_url,
-            "title": _extract_title(
-                html_content
-            ),
-            "content": content,
-            "links": extracted[
-                "links"
-            ],
-            "json_ld": extracted[
-                "json_ld"
-            ],
-            "rendered": False,
             "error": (
-                "The page did not contain a readable "
-                "job description. It may be a "
-                "JavaScript-only application page or "
-                "the actual job description may be "
-                "hosted at another URL."
+                "Could not extract meaningful "
+                "job content."
             ),
             "browser_error": browser_error,
         }
 
-    except httpx.HTTPError as exc:
+    except asyncio.CancelledError:
 
-        return {
-            "status": "error",
-            "error": (
-                f"Could not fetch job page: {exc}"
-            ),
-        }
+        raise
 
     except Exception as exc:
 
         return {
             "status": "error",
-            "error": str(exc),
+            "url": final_url,
+            "error": (
+                f"Browser fetch failed: {exc}"
+            ),
         }
-
-
-def _extract_title(html_content):
-    """
-    Extract the page title.
-    """
-
-    if not html_content:
-        return ""
-
-    soup = BeautifulSoup(
-        html_content,
-        "html.parser",
-    )
-
-    if not soup.title:
-        return ""
-
-    return clean_job_text(
-        soup.title.get_text(" ")
-    )

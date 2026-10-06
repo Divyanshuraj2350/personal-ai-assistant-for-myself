@@ -663,45 +663,81 @@ def get_memories(
 # SEARCH LONG-TERM MEMORIES
 # ============================================================
 
+MEMORY_STOP_WORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "about",
+    "be",
+    "by",
+    "can",
+    "could",
+    "did",
+    "do",
+    "does",
+    "for",
+    "from",
+    "has",
+    "have",
+    "how",
+    "i",
+    "in",
+    "is",
+    "it",
+    "me",
+    "my",
+    "of",
+    "on",
+    "or",
+    "say",
+    "should",
+    "that",
+    "the",
+    "this",
+    "to",
+    "was",
+    "what",
+    "when",
+    "where",
+    "who",
+    "why",
+    "with",
+    "you",
+    "your",
+}
+
+
 def search_memories(
     query,
     limit=5,
 ):
     """
-    Simple keyword-based memory retrieval.
-
-    This intentionally stays simple for the first
-    memory phase. Semantic/vector memory can be added
-    later if actually needed.
+    Return long-term memories that share meaningful words
+    with the user's request.
     """
 
-    if not isinstance(
-        query,
-        str,
-    ):
+    if not isinstance(query, str):
         return []
 
-    query = query.strip().lower()
-
-    if not query:
-        return []
-
-    memories = _load_memories()
-
-    query_words = set(
-        re.findall(
+    query_words = {
+        word
+        for word in re.findall(
             r"\b\w+\b",
-            query,
+            query.lower(),
         )
-    )
+        if len(word) >= 3
+        and word not in MEMORY_STOP_WORDS
+    }
 
     if not query_words:
         return []
 
     scored = []
 
-    for memory in memories:
-
+    for memory in _load_memories():
         content = str(
             memory.get(
                 "content",
@@ -723,7 +759,6 @@ def search_memories(
         )
 
         if score > 0:
-
             scored.append(
                 (
                     score,
@@ -744,10 +779,8 @@ def search_memories(
 
     return [
         memory
-        for score, memory
-        in scored[:limit]
+        for score, memory in scored[:limit]
     ]
-
 
 # ============================================================
 # DELETE LONG-TERM MEMORY

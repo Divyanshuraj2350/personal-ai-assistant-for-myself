@@ -2,6 +2,320 @@ const messageInput = document.getElementById("message");
 const sendButton = document.getElementById("send-button");
 const micButton = document.getElementById("mic-button");
 const chat = document.getElementById("chat");
+const attachButton =
+    document.getElementById("attach-button");
+
+const attachmentMenu =
+    document.getElementById("attachment-menu");
+
+const attachmentOptions =
+    document.querySelectorAll(".attachment-option");
+
+const attachmentInputs = {
+    "document-input":
+        document.getElementById("document-input"),
+
+    "image-input":
+        document.getElementById("image-input"),
+
+    "audio-input":
+        document.getElementById("audio-input"),
+
+    "video-input":
+        document.getElementById("video-input"),
+};
+
+let fileUploadInProgress = false;
+
+
+// ==========================================================
+// ATTACHMENT MENU
+// ==========================================================
+
+function closeAttachmentMenu() {
+
+    attachmentMenu.hidden = true;
+
+    attachButton.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+}
+
+
+function toggleAttachmentMenu() {
+
+    if (fileUploadInProgress) {
+        return;
+    }
+
+    const isOpen =
+        !attachmentMenu.hidden;
+
+    attachmentMenu.hidden =
+        isOpen;
+
+    attachButton.setAttribute(
+        "aria-expanded",
+        String(!isOpen)
+    );
+}
+
+
+attachButton.addEventListener(
+    "click",
+    (event) => {
+
+        event.stopPropagation();
+
+        toggleAttachmentMenu();
+    }
+);
+
+
+attachmentOptions.forEach(option => {
+
+    option.addEventListener(
+        "click",
+        (event) => {
+
+            event.stopPropagation();
+
+            const inputId =
+                option.dataset.input;
+
+            const input =
+                attachmentInputs[inputId];
+
+            if (!input) {
+                return;
+            }
+
+            closeAttachmentMenu();
+
+            input.value = "";
+
+            input.click();
+        }
+    );
+});
+
+
+document.addEventListener(
+    "click",
+    (event) => {
+
+        if (
+            !event.target.closest(
+                ".attachment-wrapper"
+            )
+        ) {
+            closeAttachmentMenu();
+        }
+    }
+);
+
+
+// ==========================================================
+// FILE UPLOAD
+// ==========================================================
+
+function addFileStatus(
+    fileName,
+    status,
+    message
+) {
+
+    const card =
+        document.createElement("div");
+
+    card.className =
+        "message ai-message file-message";
+
+
+    const label =
+        document.createElement("div");
+
+    label.className =
+        "message-label";
+
+    label.textContent =
+        "My Agent";
+
+
+    const content =
+        document.createElement("div");
+
+    content.className =
+        "file-status-card";
+
+
+    const title =
+        document.createElement("strong");
+
+    title.textContent =
+        fileName;
+
+
+    const state =
+        document.createElement("div");
+
+    state.className =
+        `file-status ${status}`;
+
+    state.textContent =
+        message;
+
+
+    content.appendChild(title);
+
+    content.appendChild(state);
+
+    card.appendChild(label);
+
+    card.appendChild(content);
+
+    chat.appendChild(card);
+
+    chat.scrollTop =
+        chat.scrollHeight;
+
+
+    return {
+        card,
+        state,
+    };
+}
+
+
+async function uploadFile(file) {
+
+    if (
+        !file ||
+        fileUploadInProgress
+    ) {
+        return;
+    }
+
+    fileUploadInProgress = true;
+
+    attachButton.disabled = true;
+
+    const statusCard =
+        addFileStatus(
+            file.name,
+            "processing",
+            "Uploading and processing..."
+        );
+
+    try {
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "file",
+            file
+        );
+
+
+        const response =
+            await fetch(
+                "/files/upload",
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            data.status !== "success"
+        ) {
+
+            throw new Error(
+                data.message ||
+                "File processing failed."
+            );
+        }
+
+
+        statusCard.state.className =
+            "file-status success";
+
+        statusCard.state.textContent =
+            `✓ Processed successfully — ` +
+            `${data.media_type || "file"} ` +
+            `with ${data.chunks || 0} chunk(s).`;
+
+
+        if (data.file_id) {
+
+            const id =
+                document.createElement("div");
+
+            id.className =
+                "file-id";
+
+            id.textContent =
+                `File ID: ${data.file_id}`;
+
+            statusCard.card
+                .querySelector(
+                    ".file-status-card"
+                )
+                .appendChild(id);
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "File upload error:",
+            error
+        );
+
+
+        statusCard.state.className =
+            "file-status error";
+
+        statusCard.state.textContent =
+            `✕ ${error.message || "Upload failed."}`;
+    }
+
+    finally {
+
+        fileUploadInProgress =
+            false;
+
+        attachButton.disabled =
+            false;
+    }
+}
+
+
+Object.values(
+    attachmentInputs
+).forEach(input => {
+
+    input.addEventListener(
+        "change",
+        () => {
+
+            const file =
+                input.files[0];
+
+            if (file) {
+                uploadFile(file);
+            }
+        }
+    );
+});
 
 
 // ==========================================================
@@ -870,6 +1184,25 @@ async function sendMessage() {
                     continue;
                 }
 
+                // ------------------------------------------
+                // JOB ANALYSIS SUMMARY
+                // ------------------------------------------
+
+                if (
+                    data.type === "job_analysis_summary"
+                ) {
+                    agentMessage.remove();
+
+                    addMessage(
+                        "My Agent",
+                        data.content,
+                        "ai-message"
+                    );
+
+                    continue;
+                }
+
+
 
                 // ------------------------------------------
                 // EMAIL APPROVAL
@@ -1021,6 +1354,19 @@ const careerResult =
 
 
 // ==========================================================
+// CAREER STATE
+// ==========================================================
+
+let careerState = {
+    jobUrl: "",
+    applicationUrl: "",
+    applicationResult: null,
+    resumeFile: null,
+    resumeUploaded: false,
+};
+
+
+// ==========================================================
 // HTML SAFETY
 // ==========================================================
 
@@ -1127,691 +1473,48 @@ function careerBullets(values) {
 
 
 // ==========================================================
-// CAREER RESULT
+// CAREER STATUS
 // ==========================================================
 
-function renderCareerResult(data) {
+function setCareerStatus(
+    message,
+    type = ""
+) {
 
-    const job =
-        data.job || {};
+    if (!careerStatus) {
+        return;
+    }
 
-    const match =
-        data.match || {};
+    careerStatus.className =
+        `career-status ${type}`;
 
-    const skills =
-        match.skills || {};
-
-    const experience =
-        data.experience || {};
-
-    const tailoring =
-        data.tailoring || {};
-
-    const validation =
-        data.validation || {};
-
-    const resume =
-        data.resume || {};
-
-    const pdf =
-        data.pdf || {};
+    careerStatus.textContent =
+        message;
+}
 
 
-    const required =
-        skills.required || {};
+// ==========================================================
+// CAREER LOADING
+// ==========================================================
 
-    const preferred =
-        skills.preferred || {};
-
-    const technologyStack =
-        skills.technology_stack || {};
-
-
-    const matchedSkills = [
-        ...(required.matched || []),
-        ...(preferred.matched || []),
-        ...(technologyStack.matched || [])
-    ];
-
-
-    const missingSkills = [
-        ...(required.missing || []),
-        ...(preferred.missing || []),
-        ...(technologyStack.missing || [])
-    ];
-
-
-    const prioritySkills =
-        tailoring.priority_skills || [];
-
-
-    const priorityProjects =
-        tailoring.priority_projects || [];
-
-
-    const overallScore =
-        match.overall_score;
-
-
-    const recommendation =
-        match.recommendation ||
-        "Match evaluated";
-
-
-    const validationPassed =
-        validation.valid === true;
-
-
-    const pdfPath =
-        pdf.path || "";
-
-
-    const sourceUrl =
-        data.source_url ||
-        job.application_url ||
-        "";
-
+function renderCareerLoading(
+    title,
+    message
+) {
 
     careerResult.innerHTML = `
 
-        <div class="career-card">
+        <div class="career-loading">
 
-            <!-- =========================================
-                 HEADER
-            ========================================== -->
+            <div class="career-loading-spinner"></div>
 
-            <div class="career-card-header">
+            <strong>
+                ${escapeCareerHtml(title)}
+            </strong>
 
-                <div class="career-title-area">
-
-                    <div class="career-eyebrow">
-                        CAREER ANALYSIS
-                    </div>
-
-                    <h2>
-                        ${escapeCareerHtml(
-                            job.position ||
-                            "Job Position"
-                        )}
-                    </h2>
-
-                    <div class="career-company">
-
-                        ${escapeCareerHtml(
-                            job.company ||
-                            "Company not specified"
-                        )}
-
-                    </div>
-
-                </div>
-
-
-                <div class="career-score">
-
-                    <div class="career-score-number">
-
-                        ${escapeCareerHtml(
-                            overallScore ??
-                            "—"
-                        )}%
-
-                    </div>
-
-                    <div class="career-score-label">
-
-                        ${escapeCareerHtml(
-                            recommendation
-                        )}
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- =========================================
-                 JOB META
-            ========================================== -->
-
-            <div class="career-meta">
-
-                <div class="career-meta-item">
-
-                    <span class="career-meta-label">
-                        Location
-                    </span>
-
-                    <strong>
-                        ${escapeCareerHtml(
-                            job.location ||
-                            "Not specified"
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div class="career-meta-item">
-
-                    <span class="career-meta-label">
-                        Work Mode
-                    </span>
-
-                    <strong>
-                        ${escapeCareerHtml(
-                            job.work_mode ||
-                            "Not specified"
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div class="career-meta-item">
-
-                    <span class="career-meta-label">
-                        Experience
-                    </span>
-
-                    <strong>
-                        ${escapeCareerHtml(
-                            experience.required_years ??
-                            "Not specified"
-                        )}
-                        ${experience.required_years !== undefined
-                            ? "years required"
-                            : ""}
-                    </strong>
-
-                </div>
-
-
-                <div class="career-meta-item">
-
-                    <span class="career-meta-label">
-                        Salary
-                    </span>
-
-                    <strong>
-                        ${escapeCareerHtml(
-                            job.salary ||
-                            "Not specified"
-                        )}
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <!-- =========================================
-                 MATCH OVERVIEW
-            ========================================== -->
-
-            <div class="career-section">
-
-                <div class="career-section-title">
-
-                    <h3>
-                        Match Overview
-                    </h3>
-
-                    <span>
-                        How your profile compares
-                    </span>
-
-                </div>
-
-
-                <div class="career-score-grid">
-
-                    <div class="career-score-box">
-
-                        <strong>
-                            ${escapeCareerHtml(
-                                match.role_score ??
-                                "—"
-                            )}%
-                        </strong>
-
-                        <span>
-                            Role
-                        </span>
-
-                    </div>
-
-
-                    <div class="career-score-box">
-
-                        <strong>
-                            ${escapeCareerHtml(
-                                match.location_score ??
-                                "—"
-                            )}%
-                        </strong>
-
-                        <span>
-                            Location
-                        </span>
-
-                    </div>
-
-
-                    <div class="career-score-box">
-
-                        <strong>
-                            ${escapeCareerHtml(
-                                match.work_mode_score ??
-                                "—"
-                            )}%
-                        </strong>
-
-                        <span>
-                            Work Mode
-                        </span>
-
-                    </div>
-
-
-                    <div class="career-score-box">
-
-                        <strong>
-                            ${escapeCareerHtml(
-                                overallScore ??
-                                "—"
-                            )}%
-                        </strong>
-
-                        <span>
-                            Overall
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- =========================================
-                 MATCHED SKILLS
-            ========================================== -->
-
-            <div class="career-section">
-
-                <div class="career-section-title">
-
-                    <h3>
-                        Skills You Match
-                    </h3>
-
-                    <span>
-                        Skills already supported by your profile
-                    </span>
-
-                </div>
-
-                ${careerChips(
-                    matchedSkills,
-                    "matched"
-                )}
-
-            </div>
-
-
-            <!-- =========================================
-                 SKILL GAPS
-            ========================================== -->
-
-            <div class="career-section">
-
-                <div class="career-section-title">
-
-                    <h3>
-                        Skill Gaps
-                    </h3>
-
-                    <span>
-                        Requirements not currently supported
-                        by your profile
-                    </span>
-
-                </div>
-
-                ${careerChips(
-                    missingSkills,
-                    "missing"
-                )}
-
-            </div>
-
-
-            <!-- =========================================
-                 EXPERIENCE
-            ========================================== -->
-
-            <div class="career-section">
-
-                <div class="career-section-title">
-
-                    <h3>
-                        Experience Assessment
-                    </h3>
-
-                    <span>
-                        Based on your actual career profile
-                    </span>
-
-                </div>
-
-
-                <div class="
-                    career-experience-box
-                    ${
-                        experience.status === "met"
-                            ? "success"
-                            : "warning"
-                    }
-                ">
-
-                    <div>
-
-                        <strong>
-
-                            ${
-                                experience.status === "met"
-                                    ? "✓ Experience requirement met"
-                                    : "⚠ Experience requirement not met"
-                            }
-
-                        </strong>
-
-                    </div>
-
-
-                    <div class="career-experience-stats">
-
-                        <div>
-
-                            <span>
-                                Required
-                            </span>
-
-                            <strong>
-                                ${escapeCareerHtml(
-                                    experience.required_years ??
-                                    "—"
-                                )} years
-                            </strong>
-
-                        </div>
-
-
-                        <div>
-
-                            <span>
-                                Your Experience
-                            </span>
-
-                            <strong>
-                                ${escapeCareerHtml(
-                                    experience.candidate_years ??
-                                    "—"
-                                )} years
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-
-                    ${
-                        experience.message
-                            ? `
-                                <p>
-                                    ${escapeCareerHtml(
-                                        experience.message
-                                    )}
-                                </p>
-                            `
-                            : ""
-                    }
-
-                </div>
-
-            </div>
-
-
-            <!-- =========================================
-                 RESUME STRATEGY
-            ========================================== -->
-
-            <div class="career-section">
-
-                <div class="career-section-title">
-
-                    <h3>
-                        Resume Strategy
-                    </h3>
-
-                    <span>
-                        What the system prioritized
-                    </span>
-
-                </div>
-
-
-                <div class="career-strategy-grid">
-
-                    <div class="career-strategy-card">
-
-                        <h4>
-                            Priority Skills
-                        </h4>
-
-                        ${careerChips(
-                            prioritySkills,
-                            "priority"
-                        )}
-
-                    </div>
-
-
-                    <div class="career-strategy-card">
-
-                        <h4>
-                            Priority Projects
-                        </h4>
-
-                        ${careerBullets(
-                            priorityProjects
-                        )}
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- =========================================
-                 VALIDATION
-            ========================================== -->
-
-            <div class="career-section">
-
-                <div class="career-section-title">
-
-                    <h3>
-                        Resume Validation
-                    </h3>
-
-                </div>
-
-
-                ${
-                    validationPassed
-                        ? `
-                            <div class="
-                                career-validation
-                                success
-                            ">
-
-                                <div class="
-                                    career-validation-icon
-                                ">
-                                    ✓
-                                </div>
-
-                                <div>
-
-                                    <strong>
-                                        Resume validated successfully
-                                    </strong>
-
-                                    <span>
-                                        All generated resume facts
-                                        passed grounding validation.
-                                    </span>
-
-                                </div>
-
-                            </div>
-                        `
-                        : `
-                            <div class="
-                                career-validation
-                                error
-                            ">
-
-                                <div class="
-                                    career-validation-icon
-                                ">
-                                    !
-                                </div>
-
-                                <div>
-
-                                    <strong>
-                                        Resume validation failed
-                                    </strong>
-
-                                    <span>
-                                        ${
-                                            escapeCareerHtml(
-                                                (
-                                                    validation.errors ||
-                                                    []
-                                                ).join(" ")
-                                            )
-                                        }
-                                    </span>
-
-                                </div>
-
-                            </div>
-                        `
-                }
-
-            </div>
-
-
-            <!-- =========================================
-                 RESUME FACTS
-            ========================================== -->
-
-            <div class="career-section">
-
-                <div class="career-section-title">
-
-                    <h3>
-                        Generated Resume
-                    </h3>
-
-                    <span>
-                        Grounded in your existing career profile
-                    </span>
-
-                </div>
-
-
-                <div class="career-grounding">
-
-                    <div class="career-grounding-icon">
-                        ✓
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            No unsupported achievements or
-                            fabricated experience
-                        </strong>
-
-                        <span>
-                            The job description is used to
-                            prioritize your existing skills,
-                            projects and experience.
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- =========================================
-                 ACTIONS
-            ========================================== -->
-
-            <div class="career-actions">
-
-
-                ${
-                    pdfPath
-                        ? `
-                            <a
-                                class="
-                                    career-action
-                                    primary
-                                "
-                                href="/career/resume?path=${encodeURIComponent(
-                                    pdfPath
-                                )}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                📄 Open Tailored Resume
-                            </a>
-                        `
-                        : ""
-                }
-
-
-                ${
-                    sourceUrl
-                        ? `
-                            <a
-                                class="
-                                    career-action
-                                    secondary
-                                "
-                                href="${escapeCareerHtml(
-                                    sourceUrl
-                                )}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                ↗ View Job Posting
-                            </a>
-                        `
-                        : ""
-                }
-
-            </div>
+            <span>
+                ${escapeCareerHtml(message)}
+            </span>
 
         </div>
     `;
@@ -1819,80 +1522,634 @@ function renderCareerResult(data) {
 
 
 // ==========================================================
-// CAREER ANALYSIS
+// CAREER ERROR
 // ==========================================================
 
-async function analyzeCareer() {
+function renderCareerError(
+    title,
+    message
+) {
 
-    const jobUrl =
-        jobUrlInput.value.trim();
+    careerResult.innerHTML = `
+
+        <div class="career-error">
+
+            <strong>
+                ${escapeCareerHtml(title)}
+            </strong>
+
+            <span>
+                ${escapeCareerHtml(message)}
+            </span>
+
+        </div>
+    `;
+}
 
 
-    if (!jobUrl) {
+// ==========================================================
+// APPLICATION FORM RESULT
+// ==========================================================
 
-        careerStatus.textContent =
-            "Please paste a job URL first.";
+function renderApplicationFormResult(
+    data
+) {
 
-        jobUrlInput.focus();
+    const result =
+        data.application_result ||
+        data.form ||
+        data;
+
+    const applicationUrl =
+        result.application_url ||
+        result.final_url ||
+        result.url ||
+        careerState.jobUrl;
+
+    careerState.applicationResult =
+        result;
+
+    careerState.applicationUrl =
+        applicationUrl || "";
+
+    const formDetected =
+        result.is_application_form === true;
+
+    const fieldCount =
+        result.candidate_field_count ??
+        result.field_count ??
+        0;
+
+    const submitCount =
+        result.submit_control_count ??
+        0;
+
+    const title =
+        result.title ||
+        "Application Form";
+
+    const finalUrl =
+        result.final_url ||
+        result.page_url ||
+        applicationUrl ||
+        "";
+
+    if (!formDetected) {
+
+        careerResult.innerHTML = `
+
+            <div class="career-card">
+
+                <div class="career-card-header">
+
+                    <div class="career-title-area">
+
+                        <div class="career-eyebrow">
+                            APPLICATION CHECK
+                        </div>
+
+                        <h2>
+                            Application form not detected
+                        </h2>
+
+                        <div class="career-company">
+                            The supplied URL was inspected,
+                            but it does not appear to contain
+                            a usable application form.
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="career-section">
+
+                    <div class="career-section-title">
+
+                        <h3>
+                            What was checked
+                        </h3>
+
+                    </div>
+
+                    <div class="career-grounding">
+
+                        <div class="career-grounding-icon">
+                            !
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                No application form detected
+                            </strong>
+
+                            <span>
+                                Please provide the actual
+                                employer application URL,
+                                such as the Apply page or ATS
+                                application page.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+        setCareerStatus(
+            "Application form was not detected.",
+            "error"
+        );
 
         return;
     }
 
 
-    careerButton.disabled = true;
-
-    careerButton.textContent =
-        "Analyzing...";
-
-
-    careerStatus.textContent =
-        "Fetching job description...";
-
-
     careerResult.innerHTML = `
-        <div class="career-loading">
 
-            <div class="career-loading-spinner"></div>
+        <div class="career-card">
 
-            <strong>
-                Analyzing this job
-            </strong>
+            <div class="career-card-header">
 
-            <span>
-                Matching your profile and preparing
-                a grounded resume...
-            </span>
+                <div class="career-title-area">
+
+                    <div class="career-eyebrow">
+                        APPLICATION FORM
+                    </div>
+
+                    <h2>
+                        Application form detected
+                    </h2>
+
+                    <div class="career-company">
+                        ${escapeCareerHtml(title)}
+                    </div>
+
+                </div>
+
+                <div class="career-score">
+
+                    <div class="career-score-number">
+                        ✓
+                    </div>
+
+                    <div class="career-score-label">
+                        Form detected
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="career-meta">
+
+                <div class="career-meta-item">
+
+                    <span class="career-meta-label">
+                        Candidate Fields
+                    </span>
+
+                    <strong>
+                        ${escapeCareerHtml(fieldCount)}
+                    </strong>
+
+                </div>
+
+
+                <div class="career-meta-item">
+
+                    <span class="career-meta-label">
+                        Submit Controls
+                    </span>
+
+                    <strong>
+                        ${escapeCareerHtml(submitCount)}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="career-section">
+
+                <div class="career-section-title">
+
+                    <h3>
+                        Application URL
+                    </h3>
+
+                    <span>
+                        The page that will be used later
+                        for form filling
+                    </span>
+
+                </div>
+
+                <div class="career-url-box">
+
+                    <span>
+                        ${escapeCareerHtml(
+                            finalUrl
+                        )}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="career-section">
+
+                <div class="career-section-title">
+
+                    <h3>
+                        Resume
+                    </h3>
+
+                    <span>
+                        Upload the resume you want to use
+                        for this application
+                    </span>
+
+                </div>
+
+
+                <div class="career-resume-intake">
+
+                    <input
+                        id="career-resume-input"
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        hidden
+                    >
+
+                    <button
+                        id="career-resume-button"
+                        type="button"
+                        class="career-action primary"
+                    >
+                        📄 Choose Resume PDF
+                    </button>
+
+
+                    <div
+                        id="career-resume-status"
+                        class="career-resume-status"
+                    >
+                        No resume selected.
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="career-section">
+
+                <div class="career-section-title">
+
+                    <h3>
+                        Current Workflow
+                    </h3>
+
+                    <span>
+                        Career Assistant progress
+                    </span>
+
+                </div>
+
+
+                <div class="career-workflow">
+
+                    <div class="career-step completed">
+
+                        <span class="career-step-number">
+                            ✓
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Job URL provided
+                            </strong>
+
+                            <span>
+                                CA-1
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="career-step completed">
+
+                        <span class="career-step-number">
+                            ✓
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Application form detected
+                            </strong>
+
+                            <span>
+                                CA-2
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="career-step-resume"
+                        class="career-step"
+                    >
+
+                        <span
+                            id="career-step-resume-number"
+                            class="career-step-number"
+                        >
+                            3
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Upload resume
+                            </strong>
+
+                            <span>
+                                CA-3
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="career-step">
+
+                        <span class="career-step-number">
+                            4
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Extract resume
+                            </strong>
+
+                            <span>
+                                CA-4
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="career-step">
+
+                        <span class="career-step-number">
+                            5
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Build structured application data
+                            </strong>
+
+                            <span>
+                                CA-5
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="career-section">
+
+                <div class="career-grounding">
+
+                    <div class="career-grounding-icon">
+                        🔒
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Application submission is disabled
+                        </strong>
+
+                        <span>
+                            Career Assistant will never submit
+                            an application automatically.
+                            Human/legal questions will require
+                            your explicit answers.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="career-actions">
+
+                ${
+                    finalUrl
+                        ? `
+                            <a
+                                class="
+                                    career-action
+                                    secondary
+                                "
+                                href="${escapeCareerHtml(
+                                    finalUrl
+                                )}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                ↗ Open Application
+                            </a>
+                        `
+                        : ""
+                }
+
+            </div>
 
         </div>
     `;
 
 
+    setupCareerResumeUpload();
+
+
+    setCareerStatus(
+        "✓ Application form detected. Upload your resume to continue.",
+        "success"
+    );
+}
+
+
+// ==========================================================
+// CAREER RESUME UPLOAD
+// ==========================================================
+
+function setupCareerResumeUpload() {
+
+    const resumeInput =
+        document.getElementById(
+            "career-resume-input"
+        );
+
+    const resumeButton =
+        document.getElementById(
+            "career-resume-button"
+        );
+
+    const resumeStatus =
+        document.getElementById(
+            "career-resume-status"
+        );
+
+    if (
+        !resumeInput ||
+        !resumeButton ||
+        !resumeStatus
+    ) {
+        return;
+    }
+
+
+    resumeButton.addEventListener(
+        "click",
+        () => {
+
+            resumeInput.click();
+
+        }
+    );
+
+
+    resumeInput.addEventListener(
+        "change",
+        async () => {
+
+            const file =
+                resumeInput.files[0];
+
+            if (!file) {
+                return;
+            }
+
+
+            const fileName =
+                file.name.toLowerCase();
+
+
+            if (
+                !fileName.endsWith(".pdf")
+            ) {
+
+                resumeStatus.className =
+                    "career-resume-status error";
+
+                resumeStatus.textContent =
+                    "Please select a PDF resume.";
+
+                resumeInput.value = "";
+
+                return;
+            }
+
+
+            await uploadCareerResume(
+                file,
+                resumeStatus,
+                resumeButton
+            );
+        }
+    );
+}
+
+
+// ==========================================================
+// UPLOAD CAREER RESUME
+// ==========================================================
+
+async function uploadCareerResume(
+    file,
+    statusElement,
+    buttonElement
+) {
+
+    buttonElement.disabled = true;
+
+    buttonElement.textContent =
+        "Uploading...";
+
+    statusElement.className =
+        "career-resume-status processing";
+
+    statusElement.textContent =
+        "Uploading and processing your resume...";
+
+
     try {
 
-        careerStatus.textContent =
-            "Analyzing job requirements...";
+        const formData =
+            new FormData();
 
+        formData.append(
+            "file",
+            file
+        );
+
+
+        /*
+         * IMPORTANT:
+         *
+         * We reuse the existing /files/upload
+         * endpoint so the original uploaded PDF
+         * is preserved and receives a file_id.
+         *
+         * The backend returns:
+         *   file_id
+         *   file_path
+         *   processing status
+         *   rag_document_id
+         *
+         * CA-4 will consume the file_id.
+         */
 
         const response =
             await fetch(
-                "/career/analyze",
+                "/files/upload",
                 {
                     method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        job_url: jobUrl
-                    })
+                    body: formData
                 }
             );
 
 
         let data;
-
 
         try {
 
@@ -1916,60 +2173,358 @@ async function analyzeCareer() {
             throw new Error(
                 data.message ||
                 data.error ||
-                "Career analysis failed."
+                "Resume upload failed."
             );
+
         }
 
 
-        careerStatus.textContent =
-            "✓ Career analysis completed.";
+        careerState.resumeFile = {
+            file_id:
+                data.file_id || "",
+
+            file_name:
+                data.file_name ||
+                file.name,
+
+            file_path:
+                data.file_path || "",
+
+            rag_document_id:
+                data.rag_document_id || "",
+
+            processing_status:
+                data.processing_status || "",
+
+            processing_method:
+                data.processing_method || ""
+        };
 
 
-        renderCareerResult(
-            data
+        careerState.resumeUploaded =
+            true;
+
+
+        statusElement.className =
+            "career-resume-status success";
+
+        statusElement.innerHTML = `
+            ✓ Resume uploaded:
+            <strong>
+                ${escapeCareerHtml(
+                    data.file_name || file.name
+                )}
+            </strong>
+        `;
+
+
+        buttonElement.textContent =
+            "✓ Resume Uploaded";
+
+
+        const resumeStep =
+            document.getElementById(
+                "career-step-resume"
+            );
+
+        const resumeStepNumber =
+            document.getElementById(
+                "career-step-resume-number"
+            );
+
+
+        if (resumeStep) {
+
+            resumeStep.classList.add(
+                "completed"
+            );
+
+        }
+
+
+        if (resumeStepNumber) {
+
+            resumeStepNumber.textContent =
+                "✓";
+
+        }
+
+
+        setCareerStatus(
+            "✓ Resume uploaded successfully. It is ready for CA-4 extraction.",
+            "success"
         );
 
-    }
 
+        /*
+         * We intentionally STOP here.
+         *
+         * CA-4 Resume Extraction is the next
+         * backend step and will use the returned
+         * file_id.
+         *
+         * We do NOT:
+         * - modify the original PDF
+         * - generate a new resume
+         * - fill the employer form
+         * - submit anything
+         */
+
+        addCareerResumeReadyPanel();
+
+    }
     catch (error) {
 
         console.error(
-            "Career analysis error:",
+            "Career resume upload error:",
             error
         );
 
 
-        careerStatus.textContent =
-            "Career analysis failed.";
+        careerState.resumeUploaded =
+            false;
 
 
-        careerResult.innerHTML = `
+        statusElement.className =
+            "career-resume-status error";
 
-            <div class="career-error">
+        statusElement.textContent =
+            `✕ ${
+                error.message ||
+                "Resume upload failed."
+            }`;
+
+
+        buttonElement.textContent =
+            "📄 Choose Resume PDF";
+
+    }
+    finally {
+
+        buttonElement.disabled =
+            false;
+
+    }
+}
+
+
+// ==========================================================
+// RESUME READY PANEL
+// ==========================================================
+
+function addCareerResumeReadyPanel() {
+
+    const existing =
+        document.getElementById(
+            "career-resume-ready"
+        );
+
+    if (existing) {
+        existing.remove();
+    }
+
+
+    const section =
+        document.createElement("div");
+
+    section.id =
+        "career-resume-ready";
+
+    section.className =
+        "career-section";
+
+
+    section.innerHTML = `
+
+        <div class="career-section-title">
+
+            <h3>
+                Resume Ready
+            </h3>
+
+            <span>
+                CA-3 completed
+            </span>
+
+        </div>
+
+
+        <div class="career-grounding">
+
+            <div class="career-grounding-icon">
+                ✓
+            </div>
+
+            <div>
 
                 <strong>
-                    Unable to analyze this job
+                    Original resume preserved
                 </strong>
 
                 <span>
-                    ${escapeCareerHtml(
-                        error.message
-                    )}
+                    The uploaded PDF is stored as the
+                    source document for the application.
+                    The next step is structured resume
+                    extraction.
                 </span>
 
             </div>
 
-        `;
+        </div>
+
+    `;
+
+
+    careerResult
+        .querySelector(".career-card")
+        ?.appendChild(section);
+
+
+    careerResult.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
+}
+
+
+// ==========================================================
+// CAREER APPLICATION FORM DETECTION
+// ==========================================================
+
+async function detectCareerApplicationForm() {
+
+    const jobUrl =
+        jobUrlInput.value.trim();
+
+
+    if (!jobUrl) {
+
+        setCareerStatus(
+            "Please paste a job URL first.",
+            "error"
+        );
+
+        jobUrlInput.focus();
+
+        return;
 
     }
 
+
+    careerState.jobUrl =
+        jobUrl;
+
+
+    careerButton.disabled =
+        true;
+
+    careerButton.textContent =
+        "Inspecting...";
+
+
+    setCareerStatus(
+        "Checking the supplied URL for an application form...",
+        "processing"
+    );
+
+
+    renderCareerLoading(
+        "Inspecting application page",
+        "Checking whether this URL contains a real employer application form..."
+    );
+
+
+    try {
+
+        /*
+         * CA-2 endpoint.
+         *
+         * The backend should expose the existing
+         * application-form inspection logic through
+         * /career/application-form.
+         */
+
+        const response =
+            await fetch(
+                "/career/application-form",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        job_url: jobUrl
+                    })
+                }
+            );
+
+
+        let data;
+
+        try {
+
+            data =
+                await response.json();
+
+        } catch {
+
+            throw new Error(
+                "Server returned an invalid response."
+            );
+
+        }
+
+
+        if (
+            !response.ok ||
+            data.status !== "success"
+        ) {
+
+            throw new Error(
+                data.message ||
+                data.error ||
+                "Application form detection failed."
+            );
+
+        }
+
+
+        renderApplicationFormResult(
+            data
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Application form detection error:",
+            error
+        );
+
+
+        setCareerStatus(
+            "Application form detection failed.",
+            "error"
+        );
+
+
+        renderCareerError(
+            "Unable to inspect application page",
+            error.message ||
+            "Unknown application inspection error."
+        );
+
+    }
     finally {
 
         careerButton.disabled =
             false;
 
         careerButton.textContent =
-            "Analyze & Tailor Resume";
+            "Detect Application Form";
 
     }
 }
@@ -1983,7 +2538,7 @@ if (careerButton) {
 
     careerButton.addEventListener(
         "click",
-        analyzeCareer
+        detectCareerApplicationForm
     );
 
 }
@@ -2001,7 +2556,7 @@ if (jobUrlInput) {
 
                 event.preventDefault();
 
-                analyzeCareer();
+                detectCareerApplicationForm();
 
             }
 

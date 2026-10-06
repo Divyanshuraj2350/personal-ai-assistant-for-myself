@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "content": "Remember that my favorite testing code is CORE-789."
+  },
+  {
+    "role": "assistant",
+    "content": "Note received: Your favorite testing code is CORE-789. I will keep this information in mind for future reference."
+  },
+  {
+    "role": "user",
+    "content": "What is my favorite testing code?"
+  },
+  {
+    "role": "assistant",
+    "content": "Your favorite testing code is CORE-789."
+  }
+]
